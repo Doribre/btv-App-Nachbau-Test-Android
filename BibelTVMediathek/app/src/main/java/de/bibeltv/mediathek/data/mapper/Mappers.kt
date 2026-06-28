@@ -2,8 +2,12 @@ package de.bibeltv.mediathek.data.mapper
 
 import de.bibeltv.mediathek.domain.model.LiveChannel
 import de.bibeltv.mediathek.domain.model.PlayoutSource
+import de.bibeltv.mediathek.domain.model.SeriesDetailModel
+import de.bibeltv.mediathek.domain.model.VideoDetailModel
 import de.bibeltv.mediathek.domain.model.VideoItem
 import de.bibeltv.mediathek.graphql.LiveStreamsQuery
+import de.bibeltv.mediathek.graphql.SeriesDetailQuery
+import de.bibeltv.mediathek.graphql.VideoDetailQuery
 import de.bibeltv.mediathek.graphql.VideoPlayoutQuery
 import de.bibeltv.mediathek.graphql.fragment.VideoCard
 
@@ -50,6 +54,30 @@ private fun mimeFor(type: String?): String? = when {
     type.contains("mp4", true) -> "video/mp4"
     else -> null
 }
+
+fun VideoDetailQuery.Video.toDetail(): VideoDetailModel = VideoDetailModel(
+    crn = crn,
+    title = title,
+    subtitle = subtitle?.takeIf { it.isNotBlank() },
+    description = descriptionLong?.takeIf { it.isNotBlank() } ?: description?.takeIf { it.isNotBlank() },
+    durationSeconds = duration ?: 0,
+    seriesTitle = serie?.title,
+    seriesId = serie?.id,
+    seasonNumber = seasonNumber,
+    episodeNumber = episodeNumber,
+    productionYear = productionYear?.from,
+    fsk = fsk?.takeIf { it.isNotBlank() },
+    imageUrl = imageUrl(images.orEmpty().filterNotNull().firstOrNull { !it.url.isNullOrBlank() }?.url),
+    genres = genres.orEmpty().filterNotNull().map { it.name },
+)
+
+fun SeriesDetailQuery.Serie.toDetail(): SeriesDetailModel = SeriesDetailModel(
+    id = id,
+    title = title,
+    description = descriptionLong?.takeIf { it.isNotBlank() } ?: description?.takeIf { it.isNotBlank() },
+    imageUrl = imageUrl(images.orEmpty().filterNotNull().firstOrNull { !it.url.isNullOrBlank() }?.url),
+    episodes = videos.orEmpty().filterNotNull().map { it.videoCard.toDomain() },
+)
 
 fun VideoPlayoutQuery.Video.toPlayoutSource(): PlayoutSource? {
     val urls = videoUrls.orEmpty().filterNotNull().filter { !it.src.isNullOrBlank() }

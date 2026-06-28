@@ -117,5 +117,9 @@ dependencies {
     implementation(libs.media3.exoplayer.dash)
     implementation(libs.media3.ui)
 
+    // Paging (Browse / Search über die 20.000+ Videos)
+    implementation(libs.androidx.paging.runtime)
+    implementation(libs.androidx.paging.compose)
+
     debugImplementation(libs.androidx.ui.tooling)
 }

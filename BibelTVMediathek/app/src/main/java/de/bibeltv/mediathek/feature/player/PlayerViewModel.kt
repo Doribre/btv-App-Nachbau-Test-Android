@@ -6,6 +6,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
+import androidx.media3.common.PlaybackException
+import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.navigation.toRoute
@@ -43,6 +45,11 @@ class PlayerViewModel @Inject constructor(
     val state: StateFlow<PlayerUiState> = _state.asStateFlow()
 
     init {
+        player.addListener(object : Player.Listener {
+            override fun onPlayerError(error: PlaybackException) {
+                _state.value = PlayerUiState.Error("Wiedergabe nicht möglich (${error.errorCodeName}).")
+            }
+        })
         viewModelScope.launch {
             val source: PlayoutSource? = if (args.isLive) {
                 runCatching { repo.liveSource(args.liveId) }.getOrNull()
@@ -70,6 +77,7 @@ class PlayerViewModel @Inject constructor(
     }
 
     override fun onCleared() {
+        player.pause()
         player.release()
     }
 }

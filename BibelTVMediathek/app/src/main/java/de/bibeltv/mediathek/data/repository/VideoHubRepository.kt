@@ -6,7 +6,13 @@ import de.bibeltv.mediathek.domain.model.GenreItem
 import de.bibeltv.mediathek.domain.model.LiveChannel
 import de.bibeltv.mediathek.domain.model.VideoItem
 import de.bibeltv.mediathek.domain.model.PlayoutSource
+import de.bibeltv.mediathek.domain.model.SeriesDetailModel
+import de.bibeltv.mediathek.domain.model.VideoDetailModel
+import de.bibeltv.mediathek.data.mapper.toDetail
 import de.bibeltv.mediathek.data.mapper.toPlayoutSource
+import de.bibeltv.mediathek.graphql.SearchVideosQuery
+import de.bibeltv.mediathek.graphql.SeriesDetailQuery
+import de.bibeltv.mediathek.graphql.VideoDetailQuery
 import de.bibeltv.mediathek.graphql.GenreVideosQuery
 import de.bibeltv.mediathek.graphql.GenresQuery
 import de.bibeltv.mediathek.graphql.LiveStreamByIdQuery
@@ -43,6 +49,26 @@ class VideoHubRepository @Inject constructor(
     suspend fun videoPlayout(crn: String): PlayoutSource? =
         apollo.query(VideoPlayoutQuery(crn = crn)).execute()
             .dataOrThrow().videos.firstOrNull()?.toPlayoutSource()
+
+    suspend fun browseNewest(skip: Int, take: Int): List<VideoItem> =
+        apollo.query(NewestVideosQuery(take = take, skip = skip, now = nowIso())).execute()
+            .dataOrThrow().videos.map { it.videoCard.toDomain() }
+
+    suspend fun browseByGenre(genreId: Int, skip: Int, take: Int): List<VideoItem> =
+        apollo.query(GenreVideosQuery(genreId = genreId, take = take, skip = skip, now = nowIso())).execute()
+            .dataOrThrow().genre?.videos?.map { it.videoCard.toDomain() } ?: emptyList()
+
+    suspend fun searchVideos(query: String, skip: Int, take: Int): List<VideoItem> =
+        apollo.query(SearchVideosQuery(q = query, take = take, skip = skip, now = nowIso())).execute()
+            .dataOrThrow().videos.map { it.videoCard.toDomain() }
+
+    suspend fun videoDetail(crn: String): VideoDetailModel? =
+        apollo.query(VideoDetailQuery(crn = crn)).execute()
+            .dataOrThrow().videos.firstOrNull()?.toDetail()
+
+    suspend fun seriesDetail(id: Int): SeriesDetailModel? =
+        apollo.query(SeriesDetailQuery(id = id, now = nowIso())).execute()
+            .dataOrThrow().serie?.toDetail()
 
     suspend fun liveSource(id: Int): PlayoutSource? {
         val ls = apollo.query(LiveStreamByIdQuery(id = id)).execute().dataOrThrow().liveStream ?: return null

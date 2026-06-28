@@ -21,9 +21,13 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import de.bibeltv.mediathek.feature.common.PlaceholderScreen
+import de.bibeltv.mediathek.feature.browse.BrowseScreen
+import de.bibeltv.mediathek.feature.detail.SeriesDetailScreen
+import de.bibeltv.mediathek.feature.detail.VideoDetailScreen
 import de.bibeltv.mediathek.feature.home.HomeScreen
+import de.bibeltv.mediathek.feature.live.LiveScreen
 import de.bibeltv.mediathek.feature.player.PlayerScreen
+import de.bibeltv.mediathek.feature.search.SearchScreen
 import kotlin.reflect.KClass
 
 private data class TabItem(
@@ -45,11 +49,13 @@ fun AppRoot() {
     val nav = rememberNavController()
     val backStackEntry by nav.currentBackStackEntryAsState()
     val currentDestination = backStackEntry?.destination
-    val onPlayer = currentDestination?.hasRoute(Route.Player::class) == true
+    val hideBottomBar = currentDestination?.let { d ->
+        d.hasRoute(Route.Player::class) || d.hasRoute(Route.VideoDetail::class) || d.hasRoute(Route.SeriesDetail::class)
+    } == true
 
     Scaffold(
         bottomBar = {
-            if (!onPlayer) {
+            if (!hideBottomBar) {
                 NavigationBar {
                     tabs.forEach { tab ->
                         val selected = currentDestination?.hierarchy?.any { it.hasRoute(tab.routeClass) } == true
@@ -77,14 +83,33 @@ fun AppRoot() {
         ) {
             composable<Route.Start> {
                 HomeScreen(
-                    onVideoClick = { v -> nav.navigate(Route.Player(title = v.title, isLive = false, crn = v.crn)) },
+                    onVideoClick = { v -> nav.navigate(Route.VideoDetail(crn = v.crn)) },
                     onLiveClick = { c -> nav.navigate(Route.Player(title = c.title, isLive = true, liveId = c.id)) },
                 )
             }
-            composable<Route.Discover> { PlaceholderScreen("Entdecken") }
-            composable<Route.Search> { PlaceholderScreen("Suche") }
-            composable<Route.Live> { PlaceholderScreen("Live") }
+            composable<Route.Discover> {
+                BrowseScreen(onVideoClick = { v -> nav.navigate(Route.VideoDetail(crn = v.crn)) })
+            }
+            composable<Route.Search> {
+                SearchScreen(onVideoClick = { v -> nav.navigate(Route.VideoDetail(crn = v.crn)) })
+            }
+            composable<Route.Live> {
+                LiveScreen(onLiveClick = { c -> nav.navigate(Route.Player(title = c.title, isLive = true, liveId = c.id)) })
+            }
             composable<Route.Player> { PlayerScreen(onBack = { nav.popBackStack() }) }
+            composable<Route.VideoDetail> {
+                VideoDetailScreen(
+                    onBack = { nav.popBackStack() },
+                    onPlay = { crn -> nav.navigate(Route.Player(title = "", isLive = false, crn = crn)) },
+                    onOpenSeries = { id -> nav.navigate(Route.SeriesDetail(id = id)) },
+                )
+            }
+            composable<Route.SeriesDetail> {
+                SeriesDetailScreen(
+                    onBack = { nav.popBackStack() },
+                    onEpisode = { crn -> nav.navigate(Route.VideoDetail(crn = crn)) },
+                )
+            }
         }
     }
 }

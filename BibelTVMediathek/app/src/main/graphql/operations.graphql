@@ -26,12 +26,13 @@ query LiveStreams {
 
 query NewestVideos($take: Int!, $skip: Int!, $now: DateTime!) {
   videos(
-    orderBy: [{ schedulingStart: desc }]
+    orderBy: [{ hub_modifiedAt: desc }]
     take: $take
     skip: $skip
     where: {
       AND: [
         { active: { equals: true } }
+        { isMediaLibrary: { equals: true } }
         { OR: [{ schedulingStart: { lte: $now } }, { schedulingStart: { equals: null } }] }
         { OR: [{ schedulingEnd: { gt: $now } }, { schedulingEnd: { equals: null } }] }
       ]
@@ -91,5 +92,74 @@ query LiveStreamById($id: Int!) {
     title
     streamUrlHls
     streamUrlDash
+  }
+}
+
+query VideoDetail($crn: String!) {
+  videos(where: { crn: { equals: $crn } }) {
+    id
+    crn
+    title
+    subtitle
+    description
+    descriptionLong
+    duration
+    seasonNumber
+    episodeNumber
+    fsk
+    productionYear { from }
+    serie { id title }
+    genres { id name }
+    images { url category }
+  }
+}
+
+query SearchVideos($q: String!, $take: Int!, $skip: Int!, $now: DateTime!) {
+  videos(
+    orderBy: [{ hub_modifiedAt: desc }]
+    take: $take
+    skip: $skip
+    where: {
+      AND: [
+        { active: { equals: true } }
+        { isMediaLibrary: { equals: true } }
+        { OR: [{ schedulingStart: { lte: $now } }, { schedulingStart: { equals: null } }] }
+        { OR: [{ schedulingEnd: { gt: $now } }, { schedulingEnd: { equals: null } }] }
+        {
+          OR: [
+            { title: { contains: $q, mode: insensitive } }
+            { subtitle: { contains: $q, mode: insensitive } }
+            { description: { contains: $q, mode: insensitive } }
+            { serie: { title: { contains: $q, mode: insensitive } } }
+            { genres: { some: { name: { contains: $q, mode: insensitive } } } }
+          ]
+        }
+      ]
+    }
+  ) {
+    ...VideoCard
+  }
+}
+
+query SeriesDetail($id: Int!, $now: DateTime!) {
+  serie(where: { id: $id }) {
+    id
+    title
+    description
+    descriptionLong
+    images { url category }
+    videos(
+      orderBy: [{ seasonNumber: asc }, { episodeNumber: asc }]
+      take: 100
+      where: {
+        AND: [
+          { active: { equals: true } }
+          { OR: [{ schedulingStart: { lte: $now } }, { schedulingStart: { equals: null } }] }
+          { OR: [{ schedulingEnd: { gt: $now } }, { schedulingEnd: { equals: null } }] }
+        ]
+      }
+    ) {
+      ...VideoCard
+    }
   }
 }

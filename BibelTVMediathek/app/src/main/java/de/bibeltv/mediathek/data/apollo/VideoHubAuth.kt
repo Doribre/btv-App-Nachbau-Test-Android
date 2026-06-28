@@ -6,6 +6,7 @@ import com.apollographql.apollo.network.http.HttpInterceptor
 import com.apollographql.apollo.network.http.HttpInterceptorChain
 import de.bibeltv.mediathek.BuildConfig
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -48,16 +49,26 @@ class VideoHubTokenProvider @Inject constructor() {
             .url(BuildConfig.KEYCLOAK_TOKEN_URL)
             .post(body)
             .build()
-        http.newCall(request).execute().use { resp ->
-            val json = resp.body?.string().orEmpty()
-            check(resp.isSuccessful) { "Token-Anfrage fehlgeschlagen: HTTP ${resp.code}" }
-            val obj = JSONObject(json)
-            val access = obj.getString("access_token")
-            val expiresIn = obj.optLong("expires_in", 300L)
-            token = access
-            expiresAtMs = System.currentTimeMillis() + expiresIn * 1000L
-            access
+        // Bis zu 3 Versuche mit Backoff – fängt transiente Netzwerk-/5xx-Fehler ab.
+        var lastError: Exception? = null
+        repeat(3) { attempt ->
+            try {
+                http.newCall(request).execute().use { resp ->
+                    val json = resp.body?.string().orEmpty()
+                    check(resp.isSuccessful) { "Token-Anfrage fehlgeschlagen: HTTP ${resp.code}" }
+                    val obj = JSONObject(json)
+                    val access = obj.getString("access_token")
+                    val expiresIn = obj.optLong("expires_in", 300L)
+                    token = access
+                    expiresAtMs = System.currentTimeMillis() + expiresIn * 1000L
+                    return@withContext access
+                }
+            } catch (e: Exception) {
+                lastError = e
+                if (attempt < 2) delay(400L * (attempt + 1))
+            }
         }
+        throw lastError ?: IllegalStateException("Token konnte nicht geladen werden.")
     }
 }
 

@@ -41,3 +41,27 @@ data class PlayoutSource(
     val mimeType: String?,
     val widevineLicenseUrl: String?,
 )
+
+data class VideoDetailModel(
+    val crn: String,
+    val title: String,
+    val subtitle: String?,
+    val description: String?,
+    val durationSeconds: Int,
+    val seriesTitle: String?,
+    val seriesId: Int?,
+    val seasonNumber: Int?,
+    val episodeNumber: Int?,
+    val productionYear: Int?,
+    val fsk: String?,
+    val imageUrl: String?,
+    val genres: List<String>,
+)
+
+data class SeriesDetailModel(
+    val id: Int,
+    val title: String,
+    val description: String?,
+    val imageUrl: String?,
+    val episodes: List<VideoItem>,
+)

@@ -119,11 +119,11 @@ private fun HomeContent(
                     contentPadding = PaddingValues(horizontal = 16.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    items(content.live) { channel -> LiveCard(channel, onClick = { onLiveClick(channel) }) }
+                    items(content.live, key = { it.id }) { channel -> LiveCard(channel, onClick = { onLiveClick(channel) }) }
                 }
             }
         }
-        items(content.rows) { row -> ContentRowView(row, onVideoClick = onVideoClick) }
+        items(content.rows, key = { it.title }) { row -> ContentRowView(row, onVideoClick = onVideoClick) }
     }
 }
 
@@ -135,7 +135,7 @@ private fun ContentRowView(row: ContentRow, onVideoClick: (VideoItem) -> Unit) {
             contentPadding = PaddingValues(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            items(row.items) { video -> VideoCardView(video, onClick = { onVideoClick(video) }) }
+            items(row.items, key = { it.crn }) { video -> VideoCardView(video, onClick = { onVideoClick(video) }) }
         }
     }
 }
