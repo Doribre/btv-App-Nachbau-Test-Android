@@ -1,0 +1,19 @@
+# Gradle
+.gradle/
+build/
+/app/build/
+
+# Local config & secrets – niemals einchecken
+local.properties
+
+# IDE
+.idea/
+*.iml
+.DS_Store
+
+# Build artifacts
+*.apk
+*.aab
+/captures
+.externalNativeBuild
+.cxx

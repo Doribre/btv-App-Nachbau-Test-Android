@@ -1,0 +1,95 @@
+# GraphQL-Operationen gegen den VideoHub (Beta). Felder gegen das echte Schema verifiziert.
+
+fragment VideoCard on Video {
+  id
+  crn
+  title
+  subtitle
+  duration
+  seasonNumber
+  episodeNumber
+  serie { id title }
+  images { url category }
+  genres { id name }
+}
+
+query LiveStreams {
+  liveStreams(where: { AND: [{ active: { equals: true } }, { onlineStatus: { equals: online } }] }) {
+    id
+    title
+    description
+    staticThumbnail
+    liveThumbnail
+    streamUrlHls
+  }
+}
+
+query NewestVideos($take: Int!, $skip: Int!, $now: DateTime!) {
+  videos(
+    orderBy: [{ schedulingStart: desc }]
+    take: $take
+    skip: $skip
+    where: {
+      AND: [
+        { active: { equals: true } }
+        { OR: [{ schedulingStart: { lte: $now } }, { schedulingStart: { equals: null } }] }
+        { OR: [{ schedulingEnd: { gt: $now } }, { schedulingEnd: { equals: null } }] }
+      ]
+    }
+  ) {
+    ...VideoCard
+  }
+}
+
+query Genres {
+  genres(where: { show: { equals: true } }) {
+    id
+    name
+    videoCount
+    currentScheduledVideoCount
+  }
+}
+
+query GenreVideos($genreId: Int!, $take: Int!, $skip: Int!, $now: DateTime!) {
+  genre(where: { id: $genreId }) {
+    id
+    name
+    videos(
+      orderBy: [{ schedulingStart: desc }]
+      take: $take
+      skip: $skip
+      where: {
+        AND: [
+          { active: { equals: true } }
+          { OR: [{ schedulingStart: { lte: $now } }, { schedulingStart: { equals: null } }] }
+          { OR: [{ schedulingEnd: { gt: $now } }, { schedulingEnd: { equals: null } }] }
+        ]
+      }
+    ) {
+      ...VideoCard
+    }
+  }
+}
+
+query VideoPlayout($crn: String!) {
+  videos(where: { crn: { equals: $crn } }) {
+    id
+    crn
+    title
+    drm
+    videoUrls {
+      src
+      type
+      keySystem { widevine { url } }
+    }
+  }
+}
+
+query LiveStreamById($id: Int!) {
+  liveStream(where: { id: $id }) {
+    id
+    title
+    streamUrlHls
+    streamUrlDash
+  }
+}

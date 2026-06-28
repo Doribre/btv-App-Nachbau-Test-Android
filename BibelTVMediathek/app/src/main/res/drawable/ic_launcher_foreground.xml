@@ -1,0 +1,15 @@
+<!-- App-Icon-Vordergrund: Bibel-TV-Asterisk-Stern (Teal/Mint), zentriert in der Safe-Zone. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group
+        android:scaleX="0.665"
+        android:scaleY="0.665"
+        android:translateX="27.15"
+        android:translateY="23.0">
+        <path android:fillColor="#19C3B2"
+            android:pathData="M80.68,23.29L71.64,18.07L49.38,30.93L49.38,5.22L40.34,0L31.3,5.22L31.3,30.93L9.04,18.07L0,23.29L0,33.73L22.27,46.58L0,59.44L0,69.87L9.04,75.09L31.3,62.23L31.3,87.95L40.34,93.16L49.38,87.95L49.38,62.23L71.64,75.09L80.68,69.87L80.68,59.44L58.41,46.58L80.68,33.73Z" />
+    </group>
+</vector>
