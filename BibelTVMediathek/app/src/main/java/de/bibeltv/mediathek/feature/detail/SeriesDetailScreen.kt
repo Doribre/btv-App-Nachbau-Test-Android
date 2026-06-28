@@ -39,6 +39,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import de.bibeltv.mediathek.domain.model.SeriesDetailModel
 import de.bibeltv.mediathek.domain.model.VideoItem
+import de.bibeltv.mediathek.feature.common.ErrorRetry
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -68,7 +69,7 @@ fun SeriesDetailScreen(
         ) {
             when (val s = state) {
                 is DetailUiState.Loading -> CircularProgressIndicator(Modifier.align(Alignment.Center))
-                is DetailUiState.Error -> Text(s.message, Modifier.align(Alignment.Center))
+                is DetailUiState.Error -> ErrorRetry(s.message, onRetry = { viewModel.load() })
                 is DetailUiState.Content -> SeriesDetailContent(s.data, onEpisode)
             }
         }

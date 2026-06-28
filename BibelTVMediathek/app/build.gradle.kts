@@ -81,6 +81,7 @@ apollo {
 
 dependencies {
     implementation(libs.androidx.core.ktx)
+    implementation("androidx.core:core-splashscreen:1.0.1")
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
@@ -122,4 +123,7 @@ dependencies {
     implementation(libs.androidx.paging.compose)
 
     debugImplementation(libs.androidx.ui.tooling)
+
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
 }

@@ -6,13 +6,10 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -22,9 +19,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.collectAsLazyPagingItems
-import androidx.paging.compose.itemKey
 import de.bibeltv.mediathek.domain.model.VideoItem
-import de.bibeltv.mediathek.feature.common.VideoGridCard
+import de.bibeltv.mediathek.feature.common.PagedVideoGrid
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,7 +29,7 @@ fun BrowseScreen(
     viewModel: BrowseViewModel = hiltViewModel(),
 ) {
     val genres by viewModel.genres.collectAsStateWithLifecycle()
-    val selected by viewModel.selectedGenre.collectAsStateWithLifecycle()
+    val selectedId by viewModel.selectedGenreId.collectAsStateWithLifecycle()
     val items = viewModel.pages.collectAsLazyPagingItems()
 
     Scaffold(topBar = { CenterAlignedTopAppBar(title = { Text("Entdecken") }) }) { padding ->
@@ -44,33 +40,24 @@ fun BrowseScreen(
             ) {
                 item {
                     FilterChip(
-                        selected = selected == null,
-                        onClick = { viewModel.selectGenre(null) },
+                        selected = selectedId == BrowseViewModel.ALL,
+                        onClick = { viewModel.selectGenre(BrowseViewModel.ALL) },
                         label = { Text("Alle") },
                     )
                 }
-                items(genres) { genre ->
+                items(genres, key = { it.id }) { genre ->
                     FilterChip(
-                        selected = selected?.id == genre.id,
-                        onClick = { viewModel.selectGenre(genre) },
+                        selected = selectedId == genre.id,
+                        onClick = { viewModel.selectGenre(genre.id) },
                         label = { Text(genre.name) },
                     )
                 }
             }
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                contentPadding = PaddingValues(12.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.fillMaxSize(),
-            ) {
-                items(count = items.itemCount, key = items.itemKey { it.crn }) { index ->
-                    val video = items[index]
-                    if (video != null) {
-                        VideoGridCard(video, onClick = { onVideoClick(video) })
-                    }
-                }
-            }
+            PagedVideoGrid(
+                items = items,
+                onVideoClick = onVideoClick,
+                emptyText = "In dieser Kategorie gibt es noch nichts.",
+            )
         }
     }
 }

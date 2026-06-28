@@ -1,5 +1,6 @@
 package de.bibeltv.mediathek.navigation
 
+import androidx.annotation.OptIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Explore
@@ -15,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.compose.NavHost
@@ -44,6 +46,7 @@ private val tabs = listOf(
     TabItem(Route.Live, Route.Live::class, "Live", Icons.Filled.LiveTv),
 )
 
+@OptIn(UnstableApi::class)
 @Composable
 fun AppRoot() {
     val nav = rememberNavController()
@@ -83,31 +86,31 @@ fun AppRoot() {
         ) {
             composable<Route.Start> {
                 HomeScreen(
-                    onVideoClick = { v -> nav.navigate(Route.VideoDetail(crn = v.crn)) },
-                    onLiveClick = { c -> nav.navigate(Route.Player(title = c.title, isLive = true, liveId = c.id)) },
+                    onVideoClick = { v -> nav.navigate(Route.VideoDetail(crn = v.crn)) { launchSingleTop = true } },
+                    onLiveClick = { c -> nav.navigate(Route.Player(title = c.title, isLive = true, liveId = c.id)) { launchSingleTop = true } },
                 )
             }
             composable<Route.Discover> {
-                BrowseScreen(onVideoClick = { v -> nav.navigate(Route.VideoDetail(crn = v.crn)) })
+                BrowseScreen(onVideoClick = { v -> nav.navigate(Route.VideoDetail(crn = v.crn)) { launchSingleTop = true } })
             }
             composable<Route.Search> {
-                SearchScreen(onVideoClick = { v -> nav.navigate(Route.VideoDetail(crn = v.crn)) })
+                SearchScreen(onVideoClick = { v -> nav.navigate(Route.VideoDetail(crn = v.crn)) { launchSingleTop = true } })
             }
             composable<Route.Live> {
-                LiveScreen(onLiveClick = { c -> nav.navigate(Route.Player(title = c.title, isLive = true, liveId = c.id)) })
+                LiveScreen(onLiveClick = { c -> nav.navigate(Route.Player(title = c.title, isLive = true, liveId = c.id)) { launchSingleTop = true } })
             }
             composable<Route.Player> { PlayerScreen(onBack = { nav.popBackStack() }) }
             composable<Route.VideoDetail> {
                 VideoDetailScreen(
                     onBack = { nav.popBackStack() },
-                    onPlay = { crn -> nav.navigate(Route.Player(title = "", isLive = false, crn = crn)) },
-                    onOpenSeries = { id -> nav.navigate(Route.SeriesDetail(id = id)) },
+                    onPlay = { crn -> nav.navigate(Route.Player(title = "", isLive = false, crn = crn)) { launchSingleTop = true } },
+                    onOpenSeries = { id -> nav.navigate(Route.SeriesDetail(id = id)) { launchSingleTop = true } },
                 )
             }
             composable<Route.SeriesDetail> {
                 SeriesDetailScreen(
                     onBack = { nav.popBackStack() },
-                    onEpisode = { crn -> nav.navigate(Route.VideoDetail(crn = crn)) },
+                    onEpisode = { crn -> nav.navigate(Route.VideoDetail(crn = crn)) { launchSingleTop = true } },
                 )
             }
         }

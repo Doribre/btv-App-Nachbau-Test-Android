@@ -1,5 +1,6 @@
 package de.bibeltv.mediathek.feature.search
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.Pager
@@ -13,9 +14,7 @@ import de.bibeltv.mediathek.domain.model.VideoItem
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
@@ -25,12 +24,13 @@ import javax.inject.Inject
 @HiltViewModel
 class SearchViewModel @Inject constructor(
     private val repo: VideoHubRepository,
+    private val savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
-    private val _query = MutableStateFlow("")
-    val query: StateFlow<String> = _query.asStateFlow()
+    /** Suchanfrage überlebt Prozess-Tod & Rotation. */
+    val query: StateFlow<String> = savedStateHandle.getStateFlow(KEY_QUERY, "")
 
-    val results: Flow<PagingData<VideoItem>> = _query
+    val results: Flow<PagingData<VideoItem>> = query
         .debounce(350L)
         .flatMapLatest { q ->
             if (q.isBlank()) {
@@ -46,6 +46,10 @@ class SearchViewModel @Inject constructor(
         .cachedIn(viewModelScope)
 
     fun onQueryChange(value: String) {
-        _query.value = value
+        savedStateHandle[KEY_QUERY] = value
+    }
+
+    companion object {
+        private const val KEY_QUERY = "search_query"
     }
 }

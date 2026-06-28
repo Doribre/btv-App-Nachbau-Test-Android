@@ -1,5 +1,6 @@
 package de.bibeltv.mediathek.feature.browse
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.Pager
@@ -24,20 +25,21 @@ import javax.inject.Inject
 @HiltViewModel
 class BrowseViewModel @Inject constructor(
     private val repo: VideoHubRepository,
+    private val savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
     private val _genres = MutableStateFlow<List<GenreItem>>(emptyList())
     val genres: StateFlow<List<GenreItem>> = _genres.asStateFlow()
 
-    private val _selectedGenre = MutableStateFlow<GenreItem?>(null)
-    val selectedGenre: StateFlow<GenreItem?> = _selectedGenre.asStateFlow()
+    /** Überlebt Prozess-Tod & Rotation. ALL (-1) = alle Inhalte. */
+    val selectedGenreId: StateFlow<Int> = savedStateHandle.getStateFlow(KEY_GENRE, ALL)
 
-    val pages: Flow<PagingData<VideoItem>> = _selectedGenre.flatMapLatest { genre ->
+    val pages: Flow<PagingData<VideoItem>> = selectedGenreId.flatMapLatest { id ->
         Pager(
             config = PagingConfig(pageSize = 24, initialLoadSize = 48, prefetchDistance = 8, enablePlaceholders = false),
         ) {
             VideoHubPagingSource { skip, take ->
-                if (genre == null) repo.browseNewest(skip, take) else repo.browseByGenre(genre.id, skip, take)
+                if (id == ALL) repo.browseNewest(skip, take) else repo.browseByGenre(id, skip, take)
             }
         }.flow
     }.cachedIn(viewModelScope)
@@ -50,7 +52,12 @@ class BrowseViewModel @Inject constructor(
         }
     }
 
-    fun selectGenre(genre: GenreItem?) {
-        _selectedGenre.value = genre
+    fun selectGenre(id: Int) {
+        savedStateHandle[KEY_GENRE] = id
+    }
+
+    companion object {
+        const val ALL = -1
+        private const val KEY_GENRE = "browse_genre_id"
     }
 }

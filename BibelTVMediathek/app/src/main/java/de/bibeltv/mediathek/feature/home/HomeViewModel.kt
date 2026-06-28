@@ -42,8 +42,8 @@ class HomeViewModel @Inject constructor(
                     val railDefs = picked.map { genre ->
                         genre to async { runCatching { repo.videosByGenre(genre.id, 15) }.getOrDefault(emptyList()) }
                     }
+                    val newest = newestDef.await()
                     val rows = buildList {
-                        val newest = newestDef.await()
                         if (newest.isNotEmpty()) add(ContentRow("Neu in der Mediathek", newest))
                         railDefs.forEach { (genre, def) ->
                             val items = def.await()
@@ -51,10 +51,11 @@ class HomeViewModel @Inject constructor(
                         }
                     }
                     val live = liveDef.await()
+                    val featured = newest.filter { it.thumbnailUrl != null }.take(6)
                     if (rows.isEmpty() && live.isEmpty()) {
                         HomeUiState.Error("Keine Inhalte geladen.")
                     } else {
-                        HomeUiState.Content(live = live, rows = rows)
+                        HomeUiState.Content(featured = featured, live = live, rows = rows)
                     }
                 }
                 _state.value = state

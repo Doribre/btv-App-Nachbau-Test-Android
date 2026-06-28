@@ -3,6 +3,18 @@ package de.bibeltv.mediathek.feature.home
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material3.Icon
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import kotlinx.coroutines.delay
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -112,6 +124,9 @@ private fun HomeContent(
         contentPadding = PaddingValues(vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
+        if (content.featured.isNotEmpty()) {
+            item { HeroCarousel(content.featured, onClick = onVideoClick) }
+        }
         if (content.live.isNotEmpty()) {
             item {
                 SectionTitle("Live")
@@ -243,5 +258,95 @@ private fun ErrorState(message: String, onRetry: () -> Unit, modifier: Modifier 
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Button(onClick = onRetry) { Text("Erneut versuchen") }
+    }
+}
+
+@Composable
+private fun HeroCarousel(items: List<VideoItem>, onClick: (VideoItem) -> Unit) {
+    val pagerState = rememberPagerState(pageCount = { items.size })
+    LaunchedEffect(items.size) {
+        if (items.size > 1) {
+            while (true) {
+                delay(5000)
+                val next = (pagerState.currentPage + 1) % items.size
+                pagerState.animateScrollToPage(next)
+            }
+        }
+    }
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .aspectRatio(16f / 9f),
+    ) {
+        HorizontalPager(state = pagerState, modifier = Modifier.fillMaxSize()) { page ->
+            val video = items[page]
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clickable { onClick(video) },
+            ) {
+                AsyncImage(
+                    model = video.thumbnailUrl,
+                    contentDescription = video.title,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.surfaceVariant),
+                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.78f)),
+                            ),
+                        ),
+                )
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(16.dp),
+                ) {
+                    video.seriesTitle?.let {
+                        Text(
+                            text = it,
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.primary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                    Text(
+                        text = video.title,
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Button(onClick = { onClick(video) }, modifier = Modifier.padding(top = 8.dp)) {
+                        Icon(Icons.Filled.PlayArrow, contentDescription = null)
+                        Spacer(Modifier.width(6.dp))
+                        Text("Ansehen")
+                    }
+                }
+            }
+        }
+        Row(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            repeat(items.size) { index ->
+                val active = index == pagerState.currentPage
+                Box(
+                    modifier = Modifier
+                        .size(if (active) 9.dp else 6.dp)
+                        .clip(CircleShape)
+                        .background(if (active) Color.White else Color.White.copy(alpha = 0.4f)),
+                )
+            }
+        }
     }
 }
