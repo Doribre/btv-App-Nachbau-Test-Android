@@ -3,6 +3,7 @@ package de.bibeltv.mediathek.navigation
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Book
 import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
@@ -38,6 +39,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import de.bibeltv.mediathek.feature.bible.BibleBooksScreen
+import de.bibeltv.mediathek.feature.bible.BibleReaderScreen
 import de.bibeltv.mediathek.feature.browse.BrowseScreen
 import de.bibeltv.mediathek.feature.common.BrandWordmark
 import de.bibeltv.mediathek.feature.detail.SeriesDetailScreen
@@ -61,6 +64,7 @@ private data class TabItem(
 private val tabs = listOf(
     TabItem(Route.Start, Route.Start::class, "Start", Icons.Filled.Home),
     TabItem(Route.Discover, Route.Discover::class, "Entdecken", Icons.Filled.Explore),
+    TabItem(Route.Bible, Route.Bible::class, "Bibelthek", Icons.Filled.Book),
     TabItem(Route.Search, Route.Search::class, "Suche", Icons.Filled.Search),
     TabItem(Route.Live, Route.Live::class, "Live", Icons.Filled.LiveTv),
 )
@@ -160,6 +164,21 @@ fun AppRoot() {
                 }
                 composable<Route.Info> { InfoScreen(onBack = { nav.popBackStack() }) }
                 composable<Route.Settings> { SettingsScreen(onBack = { nav.popBackStack() }) }
+                composable<Route.Bible> {
+                    BibleBooksScreen(
+                        onOpenBook = { book ->
+                            nav.navigate(Route.BibleReader(bookSlug = book.slug, bookName = book.name, chapter = 1)) { launchSingleTop = true }
+                        },
+                    )
+                }
+                composable<Route.BibleReader> {
+                    BibleReaderScreen(
+                        onBack = { nav.popBackStack() },
+                        onPlayVideo = { crn, startSeconds ->
+                            nav.navigate(Route.Player(title = "", isLive = false, crn = crn, startSeconds = startSeconds)) { launchSingleTop = true }
+                        },
+                    )
+                }
                 composable<Route.Player> { PlayerScreen(onBack = { nav.popBackStack() }) }
                 composable<Route.VideoDetail> {
                     VideoDetailScreen(

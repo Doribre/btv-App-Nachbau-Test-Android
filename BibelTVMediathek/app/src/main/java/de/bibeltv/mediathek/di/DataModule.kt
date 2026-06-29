@@ -37,4 +37,11 @@ object DataModule {
         PreferenceDataStoreFactory.create {
             context.preferencesDataStoreFile("btv_settings")
         }
+
+    // Bibelthek-HTTP: bewusst OHNE Cache (kein .cache(...)) – der Bibeltext darf nicht persistiert werden.
+    @Provides
+    @Singleton
+    @BibleHttpClient
+    fun provideBibleHttpClient(): okhttp3.OkHttpClient =
+        okhttp3.OkHttpClient.Builder().build()
 }

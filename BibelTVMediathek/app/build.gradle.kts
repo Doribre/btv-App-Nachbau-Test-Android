@@ -125,6 +125,9 @@ dependencies {
     // Einstellungen (Theme / eigene Zeiten) persistent
     implementation(libs.androidx.datastore.preferences)
 
+    // Bibelthek: HTML der GNB-Web-Bibelthek live parsen (nichts wird gespeichert)
+    implementation(libs.jsoup)
+
     debugImplementation(libs.androidx.ui.tooling)
 
     testImplementation("junit:junit:4.13.2")

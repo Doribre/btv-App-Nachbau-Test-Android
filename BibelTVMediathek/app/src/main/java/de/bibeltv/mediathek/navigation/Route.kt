@@ -10,6 +10,8 @@ sealed interface Route {
     @Serializable data object Live : Route
     @Serializable data object Info : Route
     @Serializable data object Settings : Route
+    @Serializable data object Bible : Route
+    @Serializable data class BibleReader(val bookSlug: String, val bookName: String, val chapter: Int) : Route
 
     @Serializable
     data class Player(
@@ -17,6 +19,7 @@ sealed interface Route {
         val isLive: Boolean,
         val crn: String = "",
         val liveId: Int = -1,
+        val startSeconds: Int = 0,
     ) : Route
 
     @Serializable data class VideoDetail(val crn: String) : Route

@@ -70,7 +70,11 @@ class PlayerViewModel @Inject constructor(
                     )
                 }
             }.build()
-            player.setMediaItem(item)
+            if (args.startSeconds > 0) {
+                player.setMediaItem(item, args.startSeconds * 1000L)
+            } else {
+                player.setMediaItem(item)
+            }
             player.prepare()
             _state.value = PlayerUiState.Ready
         }
