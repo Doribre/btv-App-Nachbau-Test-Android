@@ -14,10 +14,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -35,31 +32,28 @@ import coil3.compose.AsyncImage
 import de.bibeltv.mediathek.domain.model.LiveChannel
 import de.bibeltv.mediathek.feature.common.ErrorRetry
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LiveScreen(
     onLiveClick: (LiveChannel) -> Unit,
     viewModel: LiveViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    Scaffold(topBar = { CenterAlignedTopAppBar(title = { Text("Live") }) }) { padding ->
-        Box(modifier = Modifier.fillMaxSize().padding(padding)) {
-            when (val s = state) {
-                is LiveUiState.Loading -> Text(
-                    "Lädt …",
-                    modifier = Modifier.align(Alignment.Center),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                is LiveUiState.Error -> ErrorRetry(s.message, onRetry = { viewModel.load() })
-                is LiveUiState.Content -> LazyVerticalGrid(
-                    columns = GridCells.Fixed(2),
-                    contentPadding = PaddingValues(12.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                    modifier = Modifier.fillMaxSize(),
-                ) {
-                    items(s.channels, key = { it.id }) { channel -> LiveGridCard(channel, onClick = { onLiveClick(channel) }) }
-                }
+    Box(modifier = Modifier.fillMaxSize()) {
+        when (val s = state) {
+            is LiveUiState.Loading -> Text(
+                "Lädt …",
+                modifier = Modifier.align(Alignment.Center),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            is LiveUiState.Error -> ErrorRetry(s.message, onRetry = { viewModel.load() })
+            is LiveUiState.Content -> LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                contentPadding = PaddingValues(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.fillMaxSize(),
+            ) {
+                items(s.channels, key = { it.id }) { channel -> LiveGridCard(channel, onClick = { onLiveClick(channel) }) }
             }
         }
     }

@@ -7,11 +7,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -25,7 +22,6 @@ import de.bibeltv.mediathek.domain.model.VideoItem
 import de.bibeltv.mediathek.feature.common.CenteredHint
 import de.bibeltv.mediathek.feature.common.PagedVideoGrid
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchScreen(
     onVideoClick: (VideoItem) -> Unit,
@@ -34,28 +30,26 @@ fun SearchScreen(
     val query by viewModel.query.collectAsStateWithLifecycle()
     val items = viewModel.results.collectAsLazyPagingItems()
 
-    Scaffold(topBar = { CenterAlignedTopAppBar(title = { Text("Suche") }) }) { padding ->
-        Column(modifier = Modifier.fillMaxSize().padding(padding)) {
-            OutlinedTextField(
-                value = query,
-                onValueChange = viewModel::onQueryChange,
-                placeholder = { Text("Titel, Serie, Thema …") },
-                leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 12.dp, vertical = 8.dp),
+    Column(modifier = Modifier.fillMaxSize()) {
+        OutlinedTextField(
+            value = query,
+            onValueChange = viewModel::onQueryChange,
+            placeholder = { Text("Titel, Serie, Thema …") },
+            leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 8.dp),
+        )
+        if (query.isBlank()) {
+            CenteredHint("Suche nach Titel, Serie, Thema oder Genre …")
+        } else {
+            PagedVideoGrid(
+                items = items,
+                onVideoClick = onVideoClick,
+                emptyText = "Keine Treffer für „$query“.",
             )
-            if (query.isBlank()) {
-                CenteredHint("Suche nach Titel, Serie, Thema oder Genre …")
-            } else {
-                PagedVideoGrid(
-                    items = items,
-                    onVideoClick = onVideoClick,
-                    emptyText = "Keine Treffer für „$query“.",
-                )
-            }
         }
     }
 }

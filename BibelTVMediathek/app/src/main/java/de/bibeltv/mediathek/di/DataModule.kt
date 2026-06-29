@@ -1,9 +1,15 @@
 package de.bibeltv.mediathek.di
 
+import android.content.Context
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.PreferenceDataStoreFactory
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.preferencesDataStoreFile
 import com.apollographql.apollo.ApolloClient
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import de.bibeltv.mediathek.BuildConfig
 import de.bibeltv.mediathek.data.apollo.AuthHttpInterceptor
@@ -24,4 +30,11 @@ object DataModule {
             .addHttpHeader("apollographql-client-version", BuildConfig.VERSION_NAME)
             .addHttpInterceptor(AuthHttpInterceptor(tokenProvider))
             .build()
+
+    @Provides
+    @Singleton
+    fun provideSettingsDataStore(@ApplicationContext context: Context): DataStore<Preferences> =
+        PreferenceDataStoreFactory.create {
+            context.preferencesDataStoreFile("btv_settings")
+        }
 }

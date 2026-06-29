@@ -8,6 +8,8 @@ sealed interface Route {
     @Serializable data object Discover : Route
     @Serializable data object Search : Route
     @Serializable data object Live : Route
+    @Serializable data object Info : Route
+    @Serializable data object Settings : Route
 
     @Serializable
     data class Player(

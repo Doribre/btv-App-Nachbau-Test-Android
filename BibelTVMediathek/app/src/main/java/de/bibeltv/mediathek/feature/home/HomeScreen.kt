@@ -1,20 +1,7 @@
 package de.bibeltv.mediathek.feature.home
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material3.Icon
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import kotlinx.coroutines.delay
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,39 +11,45 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Button
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
-import de.bibeltv.mediathek.R
 import de.bibeltv.mediathek.domain.model.ContentRow
 import de.bibeltv.mediathek.domain.model.LiveChannel
 import de.bibeltv.mediathek.domain.model.VideoItem
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -67,53 +60,18 @@ fun HomeScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
-    Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Row(verticalAlignment = Alignment.Bottom) {
-                        Image(
-                            painter = painterResource(R.drawable.ic_btv_star),
-                            contentDescription = null,
-                            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary),
-                            modifier = Modifier.height(26.dp),
-                        )
-                        Spacer(Modifier.width(7.dp))
-                        Image(
-                            painter = painterResource(R.drawable.ic_btv_wordmark),
-                            contentDescription = "bibel",
-                            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface),
-                            modifier = Modifier
-                                .height(19.dp)
-                                .padding(bottom = 2.dp),
-                        )
-                        Text(
-                            text = "APP",
-                            color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.Bold,
-                            style = MaterialTheme.typography.titleLarge,
-                            modifier = Modifier.padding(start = 6.dp, bottom = 1.dp),
-                        )
-                    }
-                },
-            )
-        },
-    ) { padding ->
-        PullToRefreshBox(
-            isRefreshing = isRefreshing,
-            onRefresh = viewModel::refresh,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding),
-        ) {
-            when (val s = state) {
-                is HomeUiState.Loading ->
-                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                is HomeUiState.Error ->
-                    ErrorState(s.message, onRetry = viewModel::load, modifier = Modifier.align(Alignment.Center))
-                is HomeUiState.Content ->
-                    HomeContent(s, onVideoClick = onVideoClick, onLiveClick = onLiveClick)
-            }
+    PullToRefreshBox(
+        isRefreshing = isRefreshing,
+        onRefresh = viewModel::refresh,
+        modifier = Modifier.fillMaxSize(),
+    ) {
+        when (val s = state) {
+            is HomeUiState.Loading ->
+                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+            is HomeUiState.Error ->
+                ErrorState(s.message, onRetry = viewModel::load, modifier = Modifier.align(Alignment.Center))
+            is HomeUiState.Content ->
+                HomeContent(s, onVideoClick = onVideoClick, onLiveClick = onLiveClick)
         }
     }
 }
