@@ -19,7 +19,8 @@ object DataModule {
     fun provideApolloClient(tokenProvider: VideoHubTokenProvider): ApolloClient =
         ApolloClient.Builder()
             .serverUrl(BuildConfig.VIDEOHUB_GRAPHQL_URL)
-            .addHttpHeader("apollographql-client-name", "btv-mediathek-android")
+            // Quell-Kennung für den Server ("woher kommt es") – exakt inkl. Bindestrich.
+            .addHttpHeader("apollographql-client-name", "bre-testapp")
             .addHttpHeader("apollographql-client-version", BuildConfig.VERSION_NAME)
             .addHttpInterceptor(AuthHttpInterceptor(tokenProvider))
             .build()
