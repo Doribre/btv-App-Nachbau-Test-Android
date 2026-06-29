@@ -5,10 +5,10 @@ import de.bibeltv.mediathek.domain.model.PlayoutSource
 import de.bibeltv.mediathek.domain.model.SeriesDetailModel
 import de.bibeltv.mediathek.domain.model.VideoDetailModel
 import de.bibeltv.mediathek.domain.model.VideoItem
-import de.bibeltv.mediathek.graphql.LiveStreamsQuery
-import de.bibeltv.mediathek.graphql.SeriesDetailQuery
-import de.bibeltv.mediathek.graphql.VideoDetailQuery
-import de.bibeltv.mediathek.graphql.VideoPlayoutQuery
+import de.bibeltv.mediathek.graphql.Bre_testapp_LiveStreamsQuery
+import de.bibeltv.mediathek.graphql.Bre_testapp_SeriesDetailQuery
+import de.bibeltv.mediathek.graphql.Bre_testapp_VideoDetailQuery
+import de.bibeltv.mediathek.graphql.Bre_testapp_VideoPlayoutQuery
 import de.bibeltv.mediathek.graphql.fragment.VideoCard
 
 private const val IMGIX_BASE = "https://bibeltv.imgix.net/"
@@ -39,7 +39,7 @@ fun VideoCard.toDomain(): VideoItem = VideoItem(
     genres = genres.map { it.name },
 )
 
-fun LiveStreamsQuery.LiveStream.toDomain(): LiveChannel = LiveChannel(
+fun Bre_testapp_LiveStreamsQuery.LiveStream.toDomain(): LiveChannel = LiveChannel(
     id = id,
     title = title,
     description = description,
@@ -55,7 +55,7 @@ private fun mimeFor(type: String?): String? = when {
     else -> null
 }
 
-fun VideoDetailQuery.Video.toDetail(): VideoDetailModel = VideoDetailModel(
+fun Bre_testapp_VideoDetailQuery.Video.toDetail(): VideoDetailModel = VideoDetailModel(
     crn = crn,
     title = title,
     subtitle = subtitle?.takeIf { it.isNotBlank() },
@@ -71,7 +71,7 @@ fun VideoDetailQuery.Video.toDetail(): VideoDetailModel = VideoDetailModel(
     genres = genres.orEmpty().filterNotNull().map { it.name },
 )
 
-fun SeriesDetailQuery.Serie.toDetail(): SeriesDetailModel = SeriesDetailModel(
+fun Bre_testapp_SeriesDetailQuery.Serie.toDetail(): SeriesDetailModel = SeriesDetailModel(
     id = id,
     title = title,
     description = descriptionLong?.takeIf { it.isNotBlank() } ?: description?.takeIf { it.isNotBlank() },
@@ -79,7 +79,7 @@ fun SeriesDetailQuery.Serie.toDetail(): SeriesDetailModel = SeriesDetailModel(
     episodes = videos.orEmpty().filterNotNull().map { it.videoCard.toDomain() },
 )
 
-fun VideoPlayoutQuery.Video.toPlayoutSource(): PlayoutSource? {
+fun Bre_testapp_VideoPlayoutQuery.Video.toPlayoutSource(): PlayoutSource? {
     val urls = videoUrls.orEmpty().filterNotNull().filter { !it.src.isNullOrBlank() }
     if (urls.isEmpty()) return null
     val chosen = urls.firstOrNull { mimeFor(it.type) == "application/x-mpegURL" }

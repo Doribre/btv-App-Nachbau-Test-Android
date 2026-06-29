@@ -1,4 +1,7 @@
 # GraphQL-Operationen gegen den VideoHub (Beta). Felder gegen das echte Schema verifiziert.
+# Alle Operationen tragen das Präfix "bre_testapp_", damit der Server die Herkunft erkennt
+# (analog zur Bestands-App mit "Android_"; GraphQL-Namen erlauben keine Bindestriche,
+#  daher Unterstriche statt "bre-testapp-"). Zusätzlich Header apollographql-client-name: bre-testapp.
 
 fragment VideoCard on Video {
   id
@@ -13,7 +16,7 @@ fragment VideoCard on Video {
   genres { id name }
 }
 
-query LiveStreams {
+query bre_testapp_LiveStreams {
   liveStreams(where: { AND: [{ active: { equals: true } }, { onlineStatus: { equals: online } }] }) {
     id
     title
@@ -24,7 +27,7 @@ query LiveStreams {
   }
 }
 
-query NewestVideos($take: Int!, $skip: Int!, $now: DateTime!) {
+query bre_testapp_NewestVideos($take: Int!, $skip: Int!, $now: DateTime!) {
   videos(
     orderBy: [{ hub_modifiedAt: desc }]
     take: $take
@@ -42,7 +45,7 @@ query NewestVideos($take: Int!, $skip: Int!, $now: DateTime!) {
   }
 }
 
-query Genres {
+query bre_testapp_Genres {
   genres(where: { show: { equals: true } }) {
     id
     name
@@ -51,7 +54,7 @@ query Genres {
   }
 }
 
-query GenreVideos($genreId: Int!, $take: Int!, $skip: Int!, $now: DateTime!) {
+query bre_testapp_GenreVideos($genreId: Int!, $take: Int!, $skip: Int!, $now: DateTime!) {
   genre(where: { id: $genreId }) {
     id
     name
@@ -72,7 +75,7 @@ query GenreVideos($genreId: Int!, $take: Int!, $skip: Int!, $now: DateTime!) {
   }
 }
 
-query VideoPlayout($crn: String!) {
+query bre_testapp_VideoPlayout($crn: String!) {
   videos(where: { crn: { equals: $crn } }) {
     id
     crn
@@ -86,7 +89,7 @@ query VideoPlayout($crn: String!) {
   }
 }
 
-query LiveStreamById($id: Int!) {
+query bre_testapp_LiveStreamById($id: Int!) {
   liveStream(where: { id: $id }) {
     id
     title
@@ -95,7 +98,7 @@ query LiveStreamById($id: Int!) {
   }
 }
 
-query VideoDetail($crn: String!) {
+query bre_testapp_VideoDetail($crn: String!) {
   videos(where: { crn: { equals: $crn } }) {
     id
     crn
@@ -114,7 +117,7 @@ query VideoDetail($crn: String!) {
   }
 }
 
-query SearchVideos($q: String!, $take: Int!, $skip: Int!, $now: DateTime!) {
+query bre_testapp_SearchVideos($q: String!, $take: Int!, $skip: Int!, $now: DateTime!) {
   videos(
     orderBy: [{ hub_modifiedAt: desc }]
     take: $take
@@ -141,7 +144,7 @@ query SearchVideos($q: String!, $take: Int!, $skip: Int!, $now: DateTime!) {
   }
 }
 
-query SeriesDetail($id: Int!, $now: DateTime!) {
+query bre_testapp_SeriesDetail($id: Int!, $now: DateTime!) {
   serie(where: { id: $id }) {
     id
     title
