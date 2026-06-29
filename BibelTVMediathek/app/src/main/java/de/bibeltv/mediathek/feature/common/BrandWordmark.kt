@@ -4,6 +4,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
@@ -32,16 +33,18 @@ fun BrandWordmark(modifier: Modifier = Modifier) {
             painter = painterResource(R.drawable.ic_btv_wordmark),
             contentDescription = "bibel",
             colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface),
-            modifier = Modifier
-                .height(19.dp)
-                .padding(bottom = 2.dp),
+            modifier = Modifier.height(19.dp),
         )
         Text(
             text = "APP",
             color = MaterialTheme.colorScheme.primary,
             fontWeight = FontWeight.Bold,
             style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.padding(start = 6.dp, bottom = 1.dp),
+            // Die Textbox reicht unter die Grundlinie (Descender); nach unten schieben,
+            // damit "APP" bündig mit Stern und Wortmarke abschließt.
+            modifier = Modifier
+                .padding(start = 6.dp)
+                .offset(y = 4.dp),
         )
     }
 }
