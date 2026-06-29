@@ -1,16 +1,19 @@
 package de.bibeltv.mediathek.feature.bible.data
 
+import de.bibeltv.mediathek.data.repository.VideoHubRepository
+import de.bibeltv.mediathek.domain.model.ChapterVideoLink
 import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Bibelthek-Repository. Lädt Buchkatalog und Kapitel LIVE und löst die Vers↔Video-Zuordnung auf.
- * Bibeltext wird NIE persistiert; nur der Buchkatalog (reine Metadaten) wird für die Sitzung im
- * Speicher gehalten, um nicht bei jedem Blättern erneut zu laden.
+ * Bibelthek-Repository. Lädt den Kapiteltext LIVE (www.bibeltv.de, GNB) und verknüpft die Videos
+ * über das offizielle VideoHub-GraphQL (VerseItem) — kein Scraping für die Video-Brücke.
+ * Bibeltext wird NIE persistiert; nur der Buchkatalog (Metadaten) lebt für die Sitzung im Speicher.
  */
 @Singleton
 class BibleRepository @Inject constructor(
     private val remote: BibleRemoteDataSource,
+    private val videoHub: VideoHubRepository,
 ) {
     @Volatile
     private var cachedBooks: List<BibleBook>? = null
@@ -22,10 +25,16 @@ class BibleRepository @Inject constructor(
         return books
     }
 
-    /** Lädt ein Kapitel frisch aus dem Netz und verknüpft die Videos pro Vers. */
+    /** Lädt ein Kapitel frisch: Text live aus dem Netz, Video-Verknüpfungen aus dem VideoHub. */
     suspend fun chapter(bookSlug: String, bookName: String, chapter: Int): BibleChapter {
         val parsed = BibleHtmlParser.parseChapter(remote.fetchChapterHtml(bookSlug, chapter))
-        return resolve(bookSlug, bookName, chapter, parsed)
+        val abbr = BibleReference.SLUG_TO_ABBR[bookSlug]
+        val links = if (abbr != null) {
+            runCatching { videoHub.verseVideos(abbr, chapter) }.getOrDefault(emptyList())
+        } else {
+            emptyList()
+        }
+        return resolve(bookSlug, bookName, chapter, parsed, links)
     }
 
     private fun resolve(
@@ -33,27 +42,24 @@ class BibleRepository @Inject constructor(
         bookName: String,
         chapter: Int,
         parsed: BibleHtmlParser.ParsedChapter,
+        links: List<ChapterVideoLink>,
     ): BibleChapter {
-        // verseNumber -> (crn -> Video), dedupliziert; kleinste Zeit gewinnt als Sprungstart.
         val perVerse = HashMap<String, LinkedHashMap<String, VerseVideo>>()
         val chapterVids = LinkedHashMap<String, VerseVideo>()
 
-        for (video in parsed.videos) {
-            for (item in video.versesItems) {
-                val ref = BibleReference.parse(item.verse) ?: continue
+        for (link in links) {
+            for (hit in link.refs) {
+                val ref = BibleReference.parse(hit.verse) ?: continue
                 if (ref.slug != bookSlug || ref.chapter != chapter) continue
+                val vv = VerseVideo(link.crn, link.title, link.subtitle, link.thumbnailUrl, hit.timeSeconds, formatTime(hit.timeSeconds))
                 if (ref.wholeChapter) {
-                    chapterVids.putIfAbsent(
-                        video.crn,
-                        VerseVideo(video.crn, video.title, video.subtitle, video.thumb, video.firstTime, formatTime(video.firstTime)),
-                    )
+                    chapterVids.putIfAbsent(link.crn, vv)
                 } else {
-                    val vv = VerseVideo(video.crn, video.title, video.subtitle, video.thumb, item.timeSeconds, item.formattedTime)
                     for (verse in parsed.verses) {
                         if (verse.numbers.any { it in ref.verses }) {
                             val bucket = perVerse.getOrPut(verse.number) { LinkedHashMap() }
-                            val existing = bucket[video.crn]
-                            if (existing == null || vv.timeSeconds < existing.timeSeconds) bucket[video.crn] = vv
+                            val existing = bucket[link.crn]
+                            if (existing == null || vv.timeSeconds < existing.timeSeconds) bucket[link.crn] = vv
                         }
                     }
                 }

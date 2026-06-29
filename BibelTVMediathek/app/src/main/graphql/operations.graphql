@@ -166,3 +166,25 @@ query bre_testapp_SeriesDetail($id: Int!, $now: DateTime!) {
     }
   }
 }
+
+# Videos, die Verse eines Kapitels referenzieren (VerseItem). prefix = "Joh 3,", exact = "Joh 3".
+query bre_testapp_VerseVideos($prefix: String!, $exact: String!, $take: Int!, $now: DateTime!) {
+  videos(
+    orderBy: [{ hub_modifiedAt: desc }]
+    take: $take
+    where: {
+      AND: [
+        { active: { equals: true } }
+        { verseItems: { some: { OR: [{ verse: { startsWith: $prefix } }, { verse: { equals: $exact } }] } } }
+        { OR: [{ schedulingStart: { lte: $now } }, { schedulingStart: { equals: null } }] }
+        { OR: [{ schedulingEnd: { gt: $now } }, { schedulingEnd: { equals: null } }] }
+      ]
+    }
+  ) {
+    ...VideoCard
+    verseItems(where: { OR: [{ verse: { startsWith: $prefix } }, { verse: { equals: $exact } }] }) {
+      verse
+      time
+    }
+  }
+}

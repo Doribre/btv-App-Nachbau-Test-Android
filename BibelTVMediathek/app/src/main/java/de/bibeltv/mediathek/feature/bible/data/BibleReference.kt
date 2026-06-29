@@ -24,6 +24,9 @@ object BibleReference {
         "2 Joh" to "2-joh", "3 Joh" to "3-joh", "Jud" to "jud", "Offb" to "offb",
     )
 
+    /** Slug → Abkürzung (für die VideoHub-VerseItem-Query, z. B. "joh" → "Joh"). */
+    val SLUG_TO_ABBR: Map<String, String> = ABBR_TO_SLUG.entries.associate { (abbr, slug) -> slug to abbr }
+
     data class VerseRef(
         val slug: String,
         val chapter: Int,

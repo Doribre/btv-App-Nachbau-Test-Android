@@ -4,8 +4,10 @@ import com.apollographql.apollo.ApolloClient
 import de.bibeltv.mediathek.data.mapper.toDetail
 import de.bibeltv.mediathek.data.mapper.toDomain
 import de.bibeltv.mediathek.data.mapper.toPlayoutSource
+import de.bibeltv.mediathek.domain.model.ChapterVideoLink
 import de.bibeltv.mediathek.domain.model.GenreItem
 import de.bibeltv.mediathek.domain.model.LiveChannel
+import de.bibeltv.mediathek.domain.model.VerseRefHit
 import de.bibeltv.mediathek.domain.model.PlayoutSource
 import de.bibeltv.mediathek.domain.model.SeriesDetailModel
 import de.bibeltv.mediathek.domain.model.VideoDetailModel
@@ -17,6 +19,7 @@ import de.bibeltv.mediathek.graphql.Bre_testapp_LiveStreamsQuery
 import de.bibeltv.mediathek.graphql.Bre_testapp_NewestVideosQuery
 import de.bibeltv.mediathek.graphql.Bre_testapp_SearchVideosQuery
 import de.bibeltv.mediathek.graphql.Bre_testapp_SeriesDetailQuery
+import de.bibeltv.mediathek.graphql.Bre_testapp_VerseVideosQuery
 import de.bibeltv.mediathek.graphql.Bre_testapp_VideoDetailQuery
 import de.bibeltv.mediathek.graphql.Bre_testapp_VideoPlayoutQuery
 import kotlinx.coroutines.delay
@@ -67,6 +70,26 @@ class VideoHubRepository @Inject constructor(
     suspend fun videosByGenre(genreId: Int, take: Int = 15): List<VideoItem> = withRetry {
         apollo.query(Bre_testapp_GenreVideosQuery(genreId = genreId, take = take, skip = 0, now = nowIso())).execute()
             .dataOrThrow().genre?.videos?.map { it.videoCard.toDomain() } ?: emptyList()
+    }
+
+    /**
+     * Videos, deren VerseItems Verse eines Kapitels referenzieren (offizielle Vers↔Video-Brücke).
+     * prefix = "<Abk> <Kapitel>," (z. B. "Joh 3,"), exact = "<Abk> <Kapitel>" (Ganzkapitel-Treffer).
+     */
+    suspend fun verseVideos(bookAbbr: String, chapter: Int, take: Int = 120): List<ChapterVideoLink> = withRetry {
+        val prefix = "$bookAbbr $chapter,"
+        val exact = "$bookAbbr $chapter"
+        apollo.query(Bre_testapp_VerseVideosQuery(prefix = prefix, exact = exact, take = take, now = nowIso())).execute()
+            .dataOrThrow().videos.map { v ->
+                val card = v.videoCard.toDomain()
+                ChapterVideoLink(
+                    crn = card.crn,
+                    title = card.title,
+                    subtitle = card.seriesTitle ?: card.subtitle,
+                    thumbnailUrl = card.thumbnailUrl,
+                    refs = v.verseItems.mapNotNull { vi -> vi.verse?.let { VerseRefHit(it, vi.time ?: 0) } },
+                )
+            }
     }
 
     suspend fun browseNewest(skip: Int, take: Int): List<VideoItem> = withRetry {
