@@ -27,8 +27,8 @@ android {
         applicationId = "de.bibeltv.mediathek"
         minSdk = 26
         targetSdk = 36
-        versionCode = 8
-        versionName = "0.8"
+        versionCode = 9
+        versionName = "0.9"
         vectorDrawables.useSupportLibrary = true
 
         // App-v1 läuft gegen BETA (Entscheidung des Product Owners).
