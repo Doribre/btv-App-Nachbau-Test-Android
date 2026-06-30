@@ -1,0 +1,628 @@
+<title>Bibelthek — Lese-Oberfläche · UX-Spezifikation</title>
+<style>
+  :root{
+    /* Petrol/Teal Markenwelt + warmer Lesegrund */
+    --petrol-900:#0b2b2f;
+    --petrol-800:#103a40;
+    --petrol-700:#155e63;
+    --teal-500:#1f8a8f;
+    --teal-400:#2fa7ab;
+    --teal-200:#9fd4d2;
+    --paper:#f7f4ec;        /* warmer Pergamentton fürs Lesen */
+    --paper-2:#efe9da;
+    --ink:#1a2326;          /* fast-schwarz mit Teal-Bias */
+    --ink-soft:#41514f;
+    --line:#d9d0bf;
+    --line-strong:#c3b8a2;
+    --card:#ffffff;
+    --accent:#c8772e;       /* gedämpftes Kupfer als Sekundärakzent (Audio/Highlights) */
+    --good:#2f8f5b;
+    --warn:#c08a1e;
+    --crit:#b4452f;
+    --code-bg:#0d2a2e;
+    --code-ink:#cfe9e6;
+    --maxw:74ch;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Source Serif 4",serif;
+    font-size:18px;
+    line-height:1.62;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 22px}
+  .wide{max-width:96ch}
+
+  /* ---- Header ---- */
+  header.hero{
+    background:
+      radial-gradient(120% 140% at 85% -10%, rgba(47,167,171,.30), transparent 55%),
+      linear-gradient(160deg,var(--petrol-900),var(--petrol-800) 60%,var(--petrol-700));
+    color:#eaf4f3;
+    padding:54px 0 40px;
+    border-bottom:3px solid var(--teal-500);
+  }
+  header.hero .wrap{max-width:80ch}
+  .eyebrow{
+    font-family:ui-sans-serif,system-ui,"Segoe UI",sans-serif;
+    text-transform:uppercase;letter-spacing:.22em;font-size:12px;font-weight:600;
+    color:var(--teal-200);margin:0 0 14px;
+  }
+  h1{
+    font-size:clamp(34px,6vw,52px);line-height:1.04;margin:0 0 14px;font-weight:600;
+    text-wrap:balance;letter-spacing:-.01em;
+  }
+  .lede{font-size:clamp(17px,2.4vw,21px);color:#cfe6e4;max-width:60ch;margin:0}
+  .meta{
+    font-family:ui-sans-serif,system-ui,"Segoe UI",sans-serif;font-size:13px;
+    color:#9fd4d2;margin-top:26px;display:flex;flex-wrap:wrap;gap:8px 18px;
+  }
+  .meta b{color:#eaf4f3;font-weight:600}
+
+  /* ---- Sections ---- */
+  section{padding:40px 0}
+  section + section{border-top:1px solid var(--line)}
+  h2{
+    font-size:clamp(24px,4vw,32px);line-height:1.12;margin:0 0 6px;font-weight:600;
+    letter-spacing:-.01em;text-wrap:balance;
+  }
+  h2 .num{
+    font-family:ui-sans-serif,system-ui,sans-serif;color:var(--teal-500);
+    font-size:.62em;font-weight:700;letter-spacing:.04em;margin-right:.5em;
+    font-variant-numeric:tabular-nums;
+  }
+  h3{font-size:20px;margin:30px 0 8px;font-weight:600;color:var(--petrol-800)}
+  h4{
+    font-family:ui-sans-serif,system-ui,sans-serif;font-size:13px;text-transform:uppercase;
+    letter-spacing:.12em;color:var(--ink-soft);margin:22px 0 8px;font-weight:700;
+  }
+  p{margin:12px 0}
+  .sub{color:var(--ink-soft);font-style:italic;margin:0 0 8px}
+  ul,ol{padding-left:1.3em;margin:12px 0}
+  li{margin:6px 0}
+  strong{font-weight:600}
+  a{color:var(--teal-500)}
+  code{
+    font-family:"SFMono-Regular",ui-monospace,"Cascadia Code",Consolas,monospace;
+    font-size:.86em;background:var(--paper-2);border:1px solid var(--line);
+    padding:.06em .38em;border-radius:4px;color:var(--petrol-800);
+  }
+
+  /* eyebrow label inline */
+  .tag{
+    font-family:ui-sans-serif,system-ui,sans-serif;font-size:11px;font-weight:700;
+    letter-spacing:.08em;text-transform:uppercase;padding:3px 9px;border-radius:999px;
+    display:inline-block;vertical-align:middle;
+  }
+  .tag.compose{background:#e3efef;color:var(--petrol-700);border:1px solid var(--teal-200)}
+  .tag.api{background:#f0e7d6;color:#7a5a1f;border:1px solid var(--line-strong)}
+
+  /* ---- Wireframe (ASCII-like screen) ---- */
+  .frames{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:18px;margin:22px 0}
+  .frame{
+    background:var(--card);border:1px solid var(--line-strong);border-radius:14px;
+    overflow:hidden;box-shadow:0 1px 0 #fff inset,0 8px 22px -16px rgba(11,43,47,.5);
+    display:flex;flex-direction:column;
+  }
+  .frame .cap{
+    font-family:ui-sans-serif,system-ui,sans-serif;font-size:12px;font-weight:700;
+    letter-spacing:.04em;color:#fff;background:var(--petrol-800);padding:8px 12px;
+    display:flex;justify-content:space-between;align-items:center;
+  }
+  .frame .cap .step{color:var(--teal-200);font-variant-numeric:tabular-nums}
+  .screen{
+    font-family:ui-sans-serif,system-ui,sans-serif;font-size:12.5px;line-height:1.5;
+    color:var(--ink);padding:0;flex:1;display:flex;flex-direction:column;
+  }
+  .bar{
+    background:var(--paper-2);border-bottom:1px solid var(--line);padding:8px 12px;
+    font-weight:600;display:flex;align-items:center;gap:8px;color:var(--petrol-800);
+  }
+  .bar .ic{color:var(--teal-500);font-weight:700}
+  .body{padding:12px;display:flex;flex-direction:column;gap:7px;flex:1}
+  .row{display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:8px;background:var(--paper);border:1px solid var(--line)}
+  .row.lead{background:#e8f1f0;border-color:var(--teal-200)}
+  .pill{font-size:10.5px;padding:2px 7px;border-radius:999px;background:var(--teal-500);color:#fff;font-weight:700}
+  .pill.copper{background:var(--accent)}
+  .pill.ghost{background:transparent;color:var(--ink-soft);border:1px solid var(--line-strong)}
+  .vnum{font-variant-numeric:tabular-nums;color:var(--teal-500);font-weight:700;font-size:11px;min-width:14px;text-align:right}
+  .versetext{color:var(--ink);font-family:Georgia,serif;font-size:12.5px;line-height:1.55}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--accent);display:inline-block}
+  .vid{width:9px;height:9px;border-radius:2px;background:var(--teal-500);display:inline-block}
+  .tabbar{
+    margin-top:auto;background:var(--petrol-900);color:#bfe0de;display:flex;
+    justify-content:space-around;padding:9px 4px;font-size:10.5px;font-weight:600;
+  }
+  .tabbar .on{color:#fff}
+  .tabbar .on span{display:block;color:var(--teal-400);font-size:14px;text-align:center}
+  .tabbar span{display:block;font-size:14px;text-align:center;opacity:.7}
+  .sheet{
+    border-top:3px solid var(--teal-500);background:#fff;border-radius:14px 14px 0 0;
+    margin:6px -1px -1px;padding:12px;box-shadow:0 -10px 24px -18px rgba(0,0,0,.5);
+  }
+  .sheet h5{margin:0 0 9px;font-size:12.5px;font-weight:700;color:var(--petrol-800);display:flex;justify-content:space-between}
+  .vcard{display:flex;gap:9px;align-items:center;padding:7px;border:1px solid var(--line);border-radius:9px;margin-bottom:7px;background:var(--paper)}
+  .thumb{width:54px;height:34px;border-radius:5px;background:linear-gradient(135deg,var(--petrol-700),var(--teal-400));flex:none;position:relative}
+  .thumb::after{content:"▶";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px}
+  .tc{font-variant-numeric:tabular-nums;font-size:10px;color:var(--ink-soft)}
+
+  /* ---- Flow ---- */
+  .flow{
+    display:flex;flex-wrap:wrap;gap:10px;align-items:stretch;margin:20px 0;
+    font-family:ui-sans-serif,system-ui,sans-serif;
+  }
+  .flow .node{
+    background:var(--card);border:1px solid var(--line-strong);border-left:4px solid var(--teal-500);
+    border-radius:10px;padding:10px 14px;font-size:13.5px;display:flex;flex-direction:column;justify-content:center;min-width:130px;
+  }
+  .flow .node b{font-size:13.5px;color:var(--petrol-800)}
+  .flow .node small{color:var(--ink-soft);font-size:11.5px}
+  .flow .arr{display:flex;align-items:center;color:var(--teal-500);font-size:20px;font-weight:700}
+
+  /* ---- Tables ---- */
+  .tablewrap{overflow-x:auto;margin:16px 0;border:1px solid var(--line-strong);border-radius:12px}
+  table{border-collapse:collapse;width:100%;font-family:ui-sans-serif,system-ui,sans-serif;font-size:14px;background:var(--card)}
+  th,td{text-align:left;padding:10px 13px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{background:var(--paper-2);font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft);font-weight:700;white-space:nowrap}
+  tr:last-child td{border-bottom:none}
+  td code{white-space:nowrap}
+  .state{font-weight:700;white-space:nowrap}
+  .state.l{color:var(--teal-500)}
+  .state.e{color:var(--ink-soft)}
+  .state.x{color:var(--crit)}
+  .state.ok{color:var(--good)}
+
+  /* ---- Callouts ---- */
+  .note{
+    background:#e8f1f0;border:1px solid var(--teal-200);border-left:4px solid var(--teal-500);
+    border-radius:10px;padding:14px 16px;margin:18px 0;font-size:15.5px;
+  }
+  .note.copper{background:#f7ecdb;border-color:var(--line-strong);border-left-color:var(--accent)}
+  .note b{color:var(--petrol-800)}
+  .note h4{margin-top:0}
+
+  /* code block */
+  pre{
+    background:var(--code-bg);color:var(--code-ink);border-radius:12px;padding:16px 18px;
+    overflow-x:auto;font-family:ui-monospace,"Cascadia Code",Consolas,monospace;font-size:13px;line-height:1.55;margin:16px 0;
+  }
+  pre code{background:none;border:none;color:inherit;padding:0;font-size:inherit}
+  .k{color:#6fd0c8}.s{color:#e0b06a}.c{color:#5e7e7c;font-style:italic}
+
+  /* component map cards */
+  .cmap{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin:18px 0}
+  .cc{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .cc code{font-size:13px;color:var(--petrol-700);background:none;border:none;padding:0;font-weight:600;display:block;margin-bottom:4px}
+  .cc small{font-family:ui-sans-serif,system-ui,sans-serif;color:var(--ink-soft);font-size:13px;line-height:1.45;display:block}
+
+  /* TOC */
+  nav.toc{
+    font-family:ui-sans-serif,system-ui,sans-serif;font-size:14px;
+    background:var(--card);border:1px solid var(--line-strong);border-radius:12px;
+    padding:16px 20px;margin:26px 0 6px;
+  }
+  nav.toc ol{margin:6px 0 0;padding-left:1.3em;columns:2;column-gap:30px}
+  nav.toc li{margin:5px 0;break-inside:avoid}
+  nav.toc a{text-decoration:none;color:var(--petrol-800)}
+  nav.toc a:hover{color:var(--teal-500);text-decoration:underline}
+
+  footer{background:var(--petrol-900);color:#9fd4d2;font-family:ui-sans-serif,system-ui,sans-serif;font-size:13px;padding:28px 0;text-align:center}
+
+  @media (max-width:560px){
+    body{font-size:17px}
+    nav.toc ol{columns:1}
+  }
+</style>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Bibel TV Mobile · Neuer Hauptbereich</p>
+    <h1>Bibelthek — die Lese&shy;oberfläche</h1>
+    <p class="lede">Eine ruhige, aufgeräumte Lese-Umgebung für die Gute Nachricht Bibel — verbunden mit dem, was Bibel&nbsp;TV am besten kann: dem Video. Vers antippen, Video an der richtigen Stelle starten, optional vorlesen lassen.</p>
+    <div class="meta">
+      <span><b>Plattform</b> Android · Jetpack Compose · Material 3</span>
+      <span><b>Marke</b> Petrol/Teal · Light&nbsp;&amp;&nbsp;Dark</span>
+      <span><b>Player</b> bestehender Media3/ExoPlayer</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+<nav class="toc">
+  <strong style="font-family:inherit;color:var(--petrol-800)">Inhalt</strong>
+  <ol>
+    <li><a href="#nav">Einstieg &amp; Navigation</a></li>
+    <li><a href="#screens">Die fünf Screens</a></li>
+    <li><a href="#lese">Lese-Layout im Detail</a></li>
+    <li><a href="#video">Videos zum Vers</a></li>
+    <li><a href="#audio">Vorlese-Audio</a></li>
+    <li><a href="#tag">Bibelstelle des Tages</a></li>
+    <li><a href="#states">Empty · Loading · Fehler</a></li>
+    <li><a href="#components">Compose-Komponenten</a></li>
+    <li><a href="#data">Datenanbindung</a></li>
+  </ol>
+</nav>
+
+</div>
+
+<!-- ============ 1. NAV ============ -->
+<section id="nav">
+<div class="wrap">
+  <h2><span class="num">01</span>Einstieg &amp; Navigation</h2>
+  <p class="sub">Wo „Bibelthek" in der bestehenden Navigation lebt.</p>
+
+  <p>Die App hat heute die Tabs <strong>Start · Entdecken · Suche · Live</strong> plus Burger-Menü. Die Bibelthek ist inhaltlich gleichrangig mit dem Video-Angebot und sollte <strong>dauerhaft sichtbar</strong> sein — nicht im Burger-Menü vergraben. Empfehlung:</p>
+
+  <ul>
+    <li><strong>Primär: eigener Tab „Bibelthek"</strong> in der <code>NavigationBar</code> (Buch-Icon). Da fünf Tabs am oberen Rand der Material-3-Empfehlung liegen, fasst man <em>Entdecken</em> sinnvoll mit der Suche zusammen oder verschiebt <em>Live</em> in die Top-Bar — so bleiben fünf gut greifbare Ziele: <strong>Start · Entdecken · Bibelthek · Suche · Live</strong>.</li>
+    <li><strong>Sekundär: Burger-Menü-Eintrag „Bibelthek"</strong> als zusätzlicher Pfad (gleiche Destination), für Nutzer, die dort suchen.</li>
+    <li><strong>Tertiär: Deep-Link</strong> <code>bibeltv://bibelthek/{buch}/{kapitel}?vers={n}</code> — getragen von der vorhandenen App-Links-Infrastruktur. „Bibelstelle des Tages" auf der Startseite springt darüber direkt in den Lesefluss.</li>
+  </ul>
+
+  <h4>Navigationsfluss</h4>
+  <div class="flow">
+    <div class="node"><b>Bibelthek-Tab</b><small>Bücher-Übersicht (Home)</small></div>
+    <div class="arr">→</div>
+    <div class="node"><b>Buch gewählt</b><small>Kapitel-Raster</small></div>
+    <div class="arr">→</div>
+    <div class="node"><b>Kapitel gewählt</b><small>Leseansicht</small></div>
+    <div class="arr">→</div>
+    <div class="node" style="border-left-color:var(--accent)"><b>Vers getippt</b><small>Aktions-Sheet (Video/Audio)</small></div>
+  </div>
+
+  <div class="note">
+    <b>Ein NavGraph, vier Routen.</b> <code>bibelthek/home</code> → <code>bibelthek/book/{bookId}</code> → <code>bibelthek/read/{bookId}/{chapter}</code>. Das Vers-Sheet ist <em>keine</em> eigene Route, sondern ein <code>ModalBottomSheet</code> innerhalb von <code>read</code> (überlebt so Rotation, blockiert nicht den Zurück-Stack). Der Sprung in den Player nutzt die <strong>bestehende</strong> Player-Destination — die Bibelthek baut keinen zweiten Player.
+  </div>
+</div>
+</section>
+
+<!-- ============ 2. SCREENS ============ -->
+<section id="screens">
+<div class="wrap wide">
+  <h2><span class="num">02</span>Die fünf Screens</h2>
+  <p class="sub">Wireframes des kompletten Durchstichs — von der Bücherwahl bis zum Vers-Sheet.</p>
+
+  <div class="frames">
+
+    <!-- Screen A: Bücher -->
+    <div class="frame">
+      <div class="cap">Bücher-Übersicht <span class="step">A</span></div>
+      <div class="screen">
+        <div class="bar"><span class="ic">☰</span> Bibelthek</div>
+        <div class="body">
+          <div class="row lead"><span class="pill copper">Tages-Vers</span> <span class="versetext">Joh 3,16 →</span></div>
+          <div style="font-size:11px;font-weight:700;color:var(--ink-soft);letter-spacing:.08em;margin-top:4px">ALTES TESTAMENT</div>
+          <div class="row"><span class="versetext">1. Mose</span></div>
+          <div class="row"><span class="versetext">2. Mose</span></div>
+          <div class="row"><span class="versetext">Psalmen</span></div>
+          <div style="font-size:11px;font-weight:700;color:var(--ink-soft);letter-spacing:.08em;margin-top:4px">NEUES TESTAMENT</div>
+          <div class="row"><span class="versetext">Matthäus</span></div>
+          <div class="row"><span class="versetext">Johannes</span> <span class="vid" title="Videos vorhanden"></span></div>
+        </div>
+        <div class="tabbar"><div><span>⌂</span>Start</div><div><span>◎</span>Entd.</div><div class="on"><span>▤</span>Bibelthek</div><div><span>⌕</span>Suche</div><div><span>•</span>Live</div></div>
+      </div>
+    </div>
+
+    <!-- Screen B: Kapitel -->
+    <div class="frame">
+      <div class="cap">Kapitel-Raster <span class="step">B</span></div>
+      <div class="screen">
+        <div class="bar"><span class="ic">‹</span> Johannes</div>
+        <div class="body">
+          <div style="font-size:11px;color:var(--ink-soft)">21 Kapitel · GNB</div>
+          <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px">
+            <div class="row" style="justify-content:center;padding:9px 0">1</div>
+            <div class="row" style="justify-content:center;padding:9px 0">2</div>
+            <div class="row lead" style="justify-content:center;padding:9px 0;font-weight:700">3</div>
+            <div class="row" style="justify-content:center;padding:9px 0">4</div>
+            <div class="row" style="justify-content:center;padding:9px 0">5</div>
+            <div class="row" style="justify-content:center;padding:9px 0">6</div>
+            <div class="row" style="justify-content:center;padding:9px 0">7</div>
+            <div class="row" style="justify-content:center;padding:9px 0">8</div>
+            <div class="row" style="justify-content:center;padding:9px 0">9</div>
+            <div class="row" style="justify-content:center;padding:9px 0">10</div>
+          </div>
+          <div style="font-size:10.5px;color:var(--ink-soft);margin-top:auto;display:flex;align-items:center;gap:6px"><span class="vid"></span> = Videos im Kapitel</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Screen C: Lesen -->
+    <div class="frame">
+      <div class="cap">Leseansicht <span class="step">C</span></div>
+      <div class="screen">
+        <div class="bar"><span class="ic">‹</span> Johannes 3 <span style="margin-left:auto;color:var(--teal-500)">Aa</span></div>
+        <div class="body" style="gap:9px">
+          <div style="display:flex;gap:6px"><span class="vnum">16</span><span class="versetext">Denn so sehr hat Gott die Welt geliebt, dass er seinen einzigen Sohn hergab <span class="dot" title="Audio"></span> <span class="vid" title="Video"></span></span></div>
+          <div style="display:flex;gap:6px"><span class="vnum">17</span><span class="versetext">Gott hat seinen Sohn nicht in die Welt gesandt, damit er sie verurteilt …</span></div>
+          <div style="display:flex;gap:6px"><span class="vnum">18</span><span class="versetext">Wer an ihn glaubt, wird nicht gerichtet.</span></div>
+          <div class="row" style="margin-top:auto;justify-content:space-between"><span class="pill ghost">‹ Kap. 2</span><span class="pill">Kap. 4 ›</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Screen D: Vers-Sheet -->
+    <div class="frame">
+      <div class="cap">Vers-Sheet (Tap auf V.16) <span class="step">D</span></div>
+      <div class="screen">
+        <div class="bar" style="opacity:.5"><span class="ic">‹</span> Johannes 3</div>
+        <div class="body" style="opacity:.35;gap:9px">
+          <div style="display:flex;gap:6px"><span class="vnum">16</span><span class="versetext">Denn so sehr hat Gott die Welt geliebt …</span></div>
+        </div>
+        <div class="sheet">
+          <h5>Johannes 3,16 <span style="color:var(--ink-soft);font-weight:500">✕</span></h5>
+          <div class="row" style="margin-bottom:9px;background:#f7ecdb;border-color:var(--line-strong)"><span class="pill copper">▶ Vorlesen</span> <span class="tc">0:24</span></div>
+          <div style="font-size:11px;font-weight:700;color:var(--ink-soft);margin-bottom:5px">2 VIDEOS ZU DIESEM VERS</div>
+          <div class="vcard"><div class="thumb"></div><div><div style="font-weight:600;font-size:11.5px">Andacht: Gottes Liebe</div><div class="tc">springt zu 12:30</div></div></div>
+          <div class="vcard"><div class="thumb"></div><div><div style="font-weight:600;font-size:11.5px">Predigt Joh 3</div><div class="tc">springt zu 03:05</div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Screen E: Player -->
+    <div class="frame">
+      <div class="cap">Bestehender Player (Sprung) <span class="step">E</span></div>
+      <div class="screen">
+        <div style="background:#000;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;color:#fff;position:relative">
+          <span style="font-size:26px">▶</span>
+          <div style="position:absolute;bottom:6px;left:8px;right:8px;height:4px;background:#ffffff33;border-radius:2px"><div style="width:42%;height:100%;background:var(--teal-400);border-radius:2px"></div></div>
+          <div style="position:absolute;bottom:12px;left:8px;font-size:10px;color:#fff" class="tc">12:30 · gestartet bei Joh 3,16</div>
+        </div>
+        <div class="body">
+          <div style="font-weight:700;font-size:13px;color:var(--petrol-800)">Andacht: Gottes Liebe</div>
+          <div class="versetext">Bei Klick im Sheet wird <code style="font-size:10px">seekTo(750_000ms)</code> auf den bereits laufenden Media3-Player gesetzt.</div>
+          <div class="row" style="margin-top:auto"><span class="pill ghost">‹ zurück zur Bibelthek</span></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <p>Die App nutzt für die Buch- und Kapitelwahl bereits vorhandene Datenmodelle (<code>Bible</code>, <code>Book</code>, <code>Chapter</code>, <code>BiblethekVerse</code>) — die Screens sind reine UI über bestehender Datenlogik. Screen E ist <strong>nicht neu</strong>: es ist der vorhandene <code>VideoDetailScreen</code>/Player, der nur einen <code>startPositionMs</code>-Parameter bekommt.</p>
+</div>
+</section>
+
+<!-- ============ 3. LESE-LAYOUT ============ -->
+<section id="lese">
+<div class="wrap">
+  <h2><span class="num">03</span>Lese-Layout im Detail</h2>
+  <p class="sub">Die Leseansicht ist das Herz der Bibelthek. Hier zählt jede typografische Entscheidung.</p>
+
+  <h3>Vers-Darstellung</h3>
+  <ul>
+    <li><strong>Fließtext, nicht Liste.</strong> Verse fließen als zusammenhängender Absatz pro Sinnabschnitt — wie im gedruckten Buch — nicht als getrennte Kästchen. Die Versnummer steht als <strong>hochgestellte, kleinere Ziffer in Teal</strong> direkt vor dem Verstext (Superscript, ~0,7em, <code>font-variant-numeric: tabular-nums</code>).</li>
+    <li><strong>Tap-Ziel pro Vers.</strong> Jeder Vers ist eine eigene tappbare Einheit (mind. 48dp Höhe als Treffer­fläche, auch wenn der sichtbare Text kürzer ist). Tap = Vers-Sheet öffnen. Long-press (später) = Markieren/Kopieren.</li>
+    <li><strong>Indikatoren am Versende</strong>, dezent und nur wenn vorhanden:
+      <ul>
+        <li><span style="color:var(--teal-500)">▪ kleines Teal-Quadrat</span> = Videos zu diesem Vers</li>
+        <li><span style="color:var(--accent)">● kleiner Kupfer-Punkt</span> = Vorlese-Audio verfügbar</li>
+      </ul>
+      Beide Marker sind so klein, dass sie den Lesefluss nicht stören, aber farblich klar zur Marke gehören.</li>
+  </ul>
+
+  <h3>Typografie &amp; Komfort</h3>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Parameter</th><th>Standard</th><th>Begründung</th></tr></thead>
+      <tbody>
+        <tr><td>Schriftart Verstext</td><td>Serif (Lese­schrift, z.&nbsp;B. <em>Source Serif</em>)</td><td>Serifen führen das Auge in langen Lesepassagen besser als Sans</td></tr>
+        <tr><td>Schriftgröße</td><td>19sp (3 Stufen: 16/19/23sp)</td><td>Über <code>Aa</code>-Button in der TopBar regelbar, in DataStore gemerkt</td></tr>
+        <tr><td>Zeilenhöhe</td><td>1,7 × Schriftgröße</td><td>Großzügiger Durchschuss = ruhiges Lesen</td></tr>
+        <tr><td>Zeilenlänge</td><td>≈ 38–42 Zeichen (Phone)</td><td>Seitenrand 20dp; nicht randlos</td></tr>
+        <tr><td>Versnummern</td><td>Superscript, Teal, tabular</td><td>Erkennbar, aber dem Text untergeordnet</td></tr>
+        <tr><td>Hintergrund (Light)</td><td>warmes Pergament <code>#f7f4ec</code></td><td>Weniger Blendung als reinweiß</td></tr>
+        <tr><td>Hintergrund (Dark)</td><td>sehr dunkles Petrol <code>#10191b</code></td><td>Markentreu, augenschonend nachts</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note">
+    <h4>Aa-Menü (Lesekomfort)</h4>
+    Der <code>Aa</code>-Button rechts in der TopBar öffnet ein kleines <code>ModalBottomSheet</code> mit: Schriftgröße (3 Segmente), Theme (Hell/Dunkel/System), und einem Schalter <strong>„Vers-Marker anzeigen"</strong> (Video-/Audio-Indikatoren ein/aus für ablenkungsfreies Lesen). Alle Werte in <code>DataStore</code>.
+  </div>
+
+  <h3>Blättern zwischen Kapiteln</h3>
+  <ul>
+    <li><strong>Horizontaler <code>HorizontalPager</code></strong> über die Kapitel eines Buches: Wischen nach links = nächstes Kapitel, rechts = vorheriges. Fühlt sich an wie Umblättern.</li>
+    <li>Zusätzlich am Ende des Verstexts feste Buttons <strong>‹ Kap. N-1</strong> und <strong>Kap. N+1 ›</strong> (Material-3 <code>FilledTonalButton</code>) — für Nutzer, die nicht wischen.</li>
+    <li>Beim Buch-Übergang (Joh 21 → nächstes Buch) erscheint ein dezenter Hinweis „Ende von Johannes — weiter mit Apostelgeschichte".</li>
+    <li>Innerhalb eines Kapitels ist die Liste eine <strong><code>LazyColumn</code></strong>; die Leseposition wird pro Kapitel in <code>ReadingProgress</code> gemerkt (Modell existiert bereits).</li>
+  </ul>
+</div>
+</section>
+
+<!-- ============ 4. VIDEO ============ -->
+<section id="video">
+<div class="wrap">
+  <h2><span class="num">04</span>Videos zum Vers <span class="tag compose">ModalBottomSheet</span></h2>
+  <p class="sub">Das Alleinstellungsmerkmal: Bibel TV verknüpft Verse mit echtem Bewegtbild.</p>
+
+  <h3>Aufruf &amp; Anzeige — Schritt für Schritt</h3>
+  <ol>
+    <li><strong>Indikator.</strong> Hat ein Vers verknüpfte Videos, zeigt das kleine Teal-Quadrat am Versende dies passiv an. Kein Bruch im Layout.</li>
+    <li><strong>Tap auf den Vers</strong> öffnet das <strong>Vers-Aktions-Sheet</strong> (<code>ModalBottomSheet</code>, halbe Höhe, mit Drag-Handle). Überschrift: die Stelle, z.&nbsp;B. „Johannes 3,16".</li>
+    <li><strong>Im Sheet, Abschnitt „Videos zu diesem Vers"</strong>: eine vertikale Liste von <strong>Video-Karten</strong>. Jede Karte zeigt:
+      <ul>
+        <li>Thumbnail (imgix-CDN, 16:9, abgerundet) mit kleinem Play-Overlay</li>
+        <li>Titel + Serie/Reihe (1–2 Zeilen, <code>maxLines</code> + Ellipsis)</li>
+        <li><strong>„springt zu 12:30"</strong> — der konkrete Timecode, an dem das Video die Bibelstelle behandelt</li>
+      </ul>
+    </li>
+    <li><strong>Tap auf eine Video-Karte</strong> → das Sheet schließt → Navigation in die <strong>bestehende Player-Destination</strong> mit <code>crn</code> + <code>startPositionMs</code>. Der Media3-Player startet bzw. springt via <code>player.seekTo(startPositionMs)</code> an die Stelle.</li>
+  </ol>
+
+  <div class="note copper">
+    <b>Warum Sheet statt Inline-Liste?</b> Die meisten Verse haben <em>keine</em> Videos. Eine permanente Inline-Liste würde den Lesefluss zerstören. Das Sheet zeigt Video <em>nur auf Absicht</em> (Tap) und hält die Leseseite ruhig. Das Sheet ist außerdem der natürliche Ort, um Audio (Abschnitt 5) gleich mit unterzubringen — ein Ort für „alles zu diesem Vers".</li>
+  </div>
+
+  <h3>Datenfluss (nutzt vorhandene GraphQL-Operationen)</h3>
+  <ol>
+    <li>Beim Laden eines Kapitels fragt das <code>BibelthekViewModel</code> das <strong>Bibelthek-Backend</strong> nach Vers→Video-Verknüpfungen (CRN + Timecode je Vers) → liefert <code>BiblethekVideoItem</code>-Liste.</li>
+    <li>Zur Anzeige der Karten (Titel/Thumbnail/Dauer) werden die CRNs gebündelt gegen den VideoHub aufgelöst: <code>Android_VideosByCRNsQuery</code> (Existenz vorab via <code>VideoActiveByCRNsQuery</code>, um nur aktive/abrufbare Videos zu zeigen).</li>
+    <li>Beim Abspielen liefert <code>Android_VideoURLsByCRNQuery</code> die Stream-/Widevine-URL — exakt der Pfad, den der bestehende Player schon nutzt.</li>
+  </ol>
+
+  <pre><code><span class="c">// Vers-Indikator: berechnet beim Kapitel-Laden, gecacht im State</span>
+data <span class="k">class</span> VerseUi(
+  <span class="k">val</span> number: Int,
+  <span class="k">val</span> text: String,
+  <span class="k">val</span> videos: List&lt;VerseVideo&gt;,   <span class="c">// leer = kein Teal-Marker</span>
+  <span class="k">val</span> audioUrl: String?            <span class="c">// null = kein Kupfer-Marker</span>
+)
+data <span class="k">class</span> VerseVideo(
+  <span class="k">val</span> crn: String,
+  <span class="k">val</span> title: String,
+  <span class="k">val</span> seriesTitle: String?,
+  <span class="k">val</span> thumbnailUrl: String,
+  <span class="k">val</span> startPositionMs: Long        <span class="c">// → player.seekTo(...)</span>
+)</code></pre>
+</div>
+</section>
+
+<!-- ============ 5. AUDIO ============ -->
+<section id="audio">
+<div class="wrap">
+  <h2><span class="num">05</span>Vorlese-Audio <span class="tag compose">optional pro Vers</span></h2>
+  <p class="sub">Eine mp3-URL je Vers — wo platziert, ohne den Lesefluss zu stören?</p>
+
+  <p>Audio gehört konzeptionell in denselben „alles zu diesem Vers"-Ort wie Video. Es bekommt aber <strong>zwei</strong> Einstiege, weil Vorlesen oft <em>kapitelweise</em> gewünscht ist:</p>
+
+  <div class="cmap">
+    <div class="cc">
+      <code>① Im Vers-Sheet (oben)</code>
+      <small>Erste Zeile des Sheets: „▶ Vorlesen · 0:24". Ein Tap spielt genau diesen Vers vor (kompakter Audio-Controller im Sheet). Kupfer-Akzent, klar vom Video-Block getrennt.</small>
+    </div>
+    <div class="cc">
+      <code>② Kapitel-Vorlesen (TopBar)</code>
+      <small>Ein Kopfhörer-/Play-Icon in der Lese-TopBar startet das Vorlesen des <em>ganzen Kapitels</em> ab dem ersten Vers mit Audio. Der gerade gesprochene Vers wird im Text dezent hervorgehoben (Auto-Scroll).</small>
+    </div>
+  </div>
+
+  <h3>Wiedergabe-Mechanik</h3>
+  <ul>
+    <li><strong>Leichtgewichtiger Audio-Player, getrennt vom Video-Player.</strong> Eine eigene kleine Media3-<code>ExoPlayer</code>-Instanz (oder <code>MediaController</code> auf einen <code>MediaSessionService</code>) für die mp3-Streams — damit Vorlesen im Hintergrund/bei gesperrtem Screen weiterläuft und in der System-Notification erscheint.</li>
+    <li><strong>Persistenter Mini-Player.</strong> Läuft Audio, erscheint über der NavigationBar eine schmale <strong>Mini-Player-Leiste</strong> (Material-3, Teal/Kupfer): aktueller Vers, Play/Pause, Schließen. So bleibt klar, dass etwas läuft, auch beim Weiterscrollen.</li>
+    <li><strong>Sequenzielles Vorlesen.</strong> Bei Kapitel-Modus wird eine <code>Playlist</code> aus den Vers-mp3s gebaut; nach jedem Vers automatisch der nächste, mit Auto-Scroll zur jeweiligen Zeile.</li>
+    <li><strong>Audio ≠ Video gleichzeitig.</strong> Startet der Nutzer ein Video, pausiert das Vorlese-Audio (Audiofokus sauber abgeben).</li>
+  </ul>
+
+  <div class="note">
+    <b>Fallback bei fehlender mp3.</b> Hat ein Vers keine <code>audioUrl</code>, wird im Sheet die Vorlesen-Zeile <em>nicht</em> angezeigt (kein ausgegrauter „toter" Button). Im Kapitel-Vorlesen werden Verse ohne Audio still übersprungen.
+  </div>
+</div>
+</section>
+
+<!-- ============ 6. TAG ============ -->
+<section id="tag">
+<div class="wrap">
+  <h2><span class="num">06</span>Bibelstelle des Tages <span class="tag api">Leseplan ÖAB</span></h2>
+  <p class="sub">Der tägliche Anker auf der Startseite — und ein Einstieg in die Bibelthek.</p>
+
+  <ul>
+    <li><strong>Auf der Startseite</strong> (bestehender Start-Tab): eine eigene <strong>Karte „Bibelstelle des Tages"</strong>, oben oder als zweites Modul. Inhalt: Datum, die Stelle (z.&nbsp;B. „Johannes 3,16"), der Verstext angerissen, ein klarer Call-to-Action <strong>„In der Bibelthek lesen ›"</strong>.</li>
+    <li><strong>Quelle:</strong> die vorhandene <strong>Leseplan-API</strong> (ÖAB — Ökumenische Arbeitsgemeinschaft für Bibellesen), abgerufen über <code>ReadingPlanApi</code>. Für ein „Wort des Tages" existiert zusätzlich <code>Android_WatchwordOfDayQuery</code> im VideoHub — die ÖAB-Tageslese ist aber die richtige Quelle für die <em>Leseplan</em>-Stelle.</li>
+    <li><strong>Tap auf die Karte</strong> → Deep-Link in die Bibelthek-Leseansicht, gescrollt und hervorgehoben auf genau diesen Vers (<code>bibeltv://bibelthek/johannes/3?vers=16</code>).</li>
+    <li><strong>Optional in der Bibelthek-Home</strong> (Screen A): dieselbe Stelle als oberster Eintrag wiederholt (siehe Wireframe „Tages-Vers"), damit der Leseplan auch beim direkten Bibelthek-Einstieg sichtbar ist.</li>
+  </ul>
+</div>
+</section>
+
+<!-- ============ 7. STATES ============ -->
+<section id="states">
+<div class="wrap wide">
+  <h2><span class="num">07</span>Empty · Loading · Fehler</h2>
+  <p class="sub">Jeder Screen braucht definierte Zustände — sonst wirkt die App kaputt, wenn Daten fehlen.</p>
+
+  <div class="tablewrap">
+    <table>
+      <thead>
+        <tr><th>Bereich</th><th>Zustand</th><th>Darstellung</th><th>Compose</th></tr>
+      </thead>
+      <tbody>
+        <tr><td rowspan="3">Kapitel laden (Leseansicht)</td><td class="state l">Loading</td><td>Skeleton-Zeilen in Verstext-Form (graue Platzhalter-Balken unterschiedlicher Länge), kein Spinner — wirkt wie eine sich füllende Seite</td><td><code>Shimmer</code> über <code>LazyColumn</code></td></tr>
+        <tr><td class="state x">Fehler (Netz)</td><td>„Kapitel konnte nicht geladen werden." + Button <strong>Erneut versuchen</strong>. Bei vorhandenem Offline-Cache: gecachten Text zeigen + dezenter Offline-Hinweis</td><td><code>Column</code> + <code>Button</code></td></tr>
+        <tr><td class="state e">Empty</td><td>Praktisch nie (Kapitel haben immer Verse). Falls doch: „Für dieses Kapitel liegt noch kein Text vor."</td><td>Text</td></tr>
+
+        <tr><td rowspan="3">Videos im Vers-Sheet</td><td class="state l">Loading</td><td>2–3 Karten-Skeletons, während CRNs gegen VideoHub aufgelöst werden</td><td>Placeholder-<code>Card</code></td></tr>
+        <tr><td class="state e">Empty</td><td>Sollte nicht auftreten (Marker erscheint nur bei vorhandenen Videos). Defensiv: Abschnitt „Videos" ausblenden statt leere Überschrift</td><td>bedingtes Rendering</td></tr>
+        <tr><td class="state x">Fehler</td><td>„Videos gerade nicht verfügbar." als kleine Inline-Zeile im Sheet — Audio-Teil bleibt nutzbar</td><td><code>Text</code> + Retry-Icon</td></tr>
+
+        <tr><td rowspan="2">Vorlese-Audio</td><td class="state x">Fehler/404</td><td>Mini-Player zeigt kurz „Audio nicht verfügbar", schließt sich; Vers-Marker wird entfernt</td><td><code>Snackbar</code></td></tr>
+        <tr><td class="state ok">Aktiv</td><td>Mini-Player-Leiste + hervorgehobener Vers + Notification</td><td>persistentes <code>Surface</code></td></tr>
+
+        <tr><td rowspan="2">Bücher/Kapitel-Übersicht</td><td class="state l">Loading</td><td>Kapitel-Raster als graue Kacheln; Bücherliste als Skeleton-Zeilen</td><td>Shimmer-Grid</td></tr>
+        <tr><td class="state x">Fehler</td><td>Vollflächiger Retry-Zustand (Bücher-Struktur ist Voraussetzung für alles Weitere)</td><td>Fullscreen-State</td></tr>
+
+        <tr><td>Bibelstelle des Tages</td><td class="state x">Fehler/leer</td><td>Karte wird <em>komplett ausgeblendet</em> — keine kaputte leere Karte auf der Startseite</td><td>bedingtes Rendering</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note copper">
+    <b>Prinzip.</b> Skeletons statt Spinner überall, wo Inhalt eine bekannte Form hat. Fehler nennen <em>was</em> schiefging und bieten <em>eine</em> Aktion. Optionale Inhalte (Video, Audio, Tagesvers) verschwinden bei Fehlern lautlos, statt die Kernfunktion — das Lesen — zu blockieren.
+  </div>
+</div>
+</section>
+
+<!-- ============ 8. COMPONENTS ============ -->
+<section id="components">
+<div class="wrap wide">
+  <h2><span class="num">08</span>Compose-Komponenten</h2>
+  <p class="sub">Konkretes Mapping Screen → Material-3-Bausteine.</p>
+
+  <div class="cmap">
+    <div class="cc"><code>Scaffold + NavigationBar</code><small>Bibelthek als 3. Tab; <code>topBar</code> je nach Screen (Titel + Aa-/Audio-Icon).</small></div>
+    <div class="cc"><code>LazyColumn (Bücher)</code><small>Mit <code>stickyHeader</code> für „Altes Testament" / „Neues Testament" über den 77 GNB-Büchern.</small></div>
+    <div class="cc"><code>LazyVerticalGrid (Kapitel)</code><small>Feste Spaltenzahl (5), <code>GridCells.Fixed</code>; Kacheln mit optionalem Video-Marker.</small></div>
+    <div class="cc"><code>HorizontalPager (Kapitel)</code><small>Eine Seite = ein Kapitel; Wischen blättert. Jede Seite enthält die Vers-<code>LazyColumn</code>.</small></div>
+    <div class="cc"><code>LazyColumn (Verse)</code><small>Verse als <code>items</code>; jeder Vers ein <code>clickable</code> Composable mit 48dp-Mindesthöhe.</small></div>
+    <div class="cc"><code>Text + buildAnnotatedString</code><small>Versnummer als <code>SuperscriptSpan</code>-Stil in Teal, Verstext im Body-Stil; Marker als inline <code>InlineTextContent</code>.</small></div>
+    <div class="cc"><code>ModalBottomSheet (Vers)</code><small>Das Vers-Aktions-Sheet mit Audio-Zeile + Video-Karten; <code>rememberModalBottomSheetState</code>.</small></div>
+    <div class="cc"><code>ModalBottomSheet (Aa)</code><small>Lesekomfort: Schriftgröße-<code>SegmentedButton</code>, Theme, Marker-<code>Switch</code>.</small></div>
+    <div class="cc"><code>Card / ListItem (Video)</code><small>Video-Karte im Sheet: <code>AsyncImage</code> (Fresco/Coil) + Titel + Timecode-Zeile.</small></div>
+    <div class="cc"><code>FilledTonalButton</code><small>„‹ Kap. N-1" / „Kap. N+1 ›" am Kapitelende.</small></div>
+    <div class="cc"><code>BottomAppBar / Surface (Mini-Player)</code><small>Persistente Audio-Leiste über der NavigationBar.</small></div>
+    <div class="cc"><code>ElevatedCard (Tagesvers)</code><small>„Bibelstelle des Tages" auf der Startseite + in der Bibelthek-Home.</small></div>
+  </div>
+
+  <div class="note">
+    <b>State-Holding.</b> Ein <code>BibelthekViewModel</code> hält <code>BibelthekUiState</code> (sealed: <code>Loading</code> / <code>Content(verses, chapterNav)</code> / <code>Error</code>). Das Vers-Sheet hat eigenen lokalen <code>selectedVerse</code>-State im Composable (überlebt Rotation via <code>rememberSaveable</code>). Audio-Wiedergabe ist ein <em>app-weiter</em> Zustand (eigener <code>AudioPlaybackController</code>), kein Screen-State — damit der Mini-Player Screen-übergreifend bleibt.
+  </div>
+</div>
+</section>
+
+<!-- ============ 9. DATA ============ -->
+<section id="data">
+<div class="wrap">
+  <h2><span class="num">09</span>Datenanbindung (Überblick)</h2>
+  <p class="sub">Womit die UI gefüttert wird — alle Quellen existieren bereits in der App.</p>
+
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>UI-Element</th><th>Quelle</th><th>Operation / Modell</th></tr></thead>
+      <tbody>
+        <tr><td>Bücher &amp; Kapitelstruktur (77 GNB)</td><td>Bibelthek-Backend / lokal</td><td><code>Bible</code>, <code>Book</code>, <code>Chapter</code></td></tr>
+        <tr><td>Verstext eines Kapitels</td><td><code>BiblethekAPI</code> / <code>BibleApi</code></td><td><code>BiblethekVerse</code> · <code>ReadText</code></td></tr>
+        <tr><td>Vers→Video-Verknüpfung + Timecode</td><td>Bibelthek-Backend</td><td><code>BiblethekVideoItem</code></td></tr>
+        <tr><td>Video-Metadaten (Karte)</td><td>VideoHub GraphQL</td><td><code>Android_VideosByCRNsQuery</code> · <code>VideoActiveByCRNsQuery</code></td></tr>
+        <tr><td>Stream-/DRM-URL (Abspielen)</td><td>VideoHub GraphQL</td><td><code>Android_VideoURLsByCRNQuery</code></td></tr>
+        <tr><td>Vorlese-Audio (mp3 je Vers)</td><td>Bibelthek-Backend</td><td><code>audioUrl</code> auf <code>BiblethekVerse</code></td></tr>
+        <tr><td>Bibelstelle des Tages</td><td>Leseplan-API (ÖAB)</td><td><code>ReadingPlanApi</code></td></tr>
+        <tr><td>Leseposition / Fortschritt</td><td>lokal (Room/DataStore)</td><td><code>ReadingProgress</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note copper">
+    <b>Wichtig fürs Team.</b> Diese Bereiche der Bestands-App liegen laut Analyse noch auf dem Legacy-Fragment-Stack bzw. einem großen <code>BiblethekViewModel</code>. Die hier spezifizierte Bibelthek ist die Gelegenheit, diesen Bereich <strong>sauber in Compose</strong> mit dünner Repository-Schicht neu zu bauen — der <code>BibelthekViewModel</code> sollte dabei in Lese-, Video- und Audio-Verantwortlichkeiten aufgeteilt werden, statt erneut zur God-Class zu wachsen.
+  </div>
+</div>
+</section>
+
+<footer>
+  <div class="wrap">Bibelthek · UX-Spezifikation für die Bibel-TV-App · Jetpack Compose / Material 3 · Petrol&nbsp;&amp;&nbsp;Teal</div>
+</footer>
