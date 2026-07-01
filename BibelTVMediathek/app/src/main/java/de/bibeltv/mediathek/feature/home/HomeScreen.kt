@@ -305,7 +305,7 @@ private fun HeroCarousel(items: List<VideoItem>, onClick: (VideoItem) -> Unit) {
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
                     )
-                    val teaser = video.subtitle
+                    val teaser = video.description ?: video.subtitle
                     if (!teaser.isNullOrBlank()) {
                         Text(
                             text = teaser,

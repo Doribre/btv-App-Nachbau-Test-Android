@@ -13,6 +13,7 @@ data class VideoItem(
     val episodeNumber: Int?,
     val thumbnailUrl: String?,
     val genres: List<String>,
+    val description: String? = null,
 )
 
 data class LiveChannel(

@@ -8,6 +8,7 @@ fragment VideoCard on Video {
   crn
   title
   subtitle
+  description
   duration
   seasonNumber
   episodeNumber

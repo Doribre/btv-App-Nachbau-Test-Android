@@ -37,6 +37,7 @@ fun VideoCard.toDomain(): VideoItem = VideoItem(
     episodeNumber = episodeNumber,
     thumbnailUrl = bestThumbnail(images),
     genres = genres.map { it.name },
+    description = description?.ifBlank { null },
 )
 
 fun Bre_testapp_LiveStreamsQuery.LiveStream.toDomain(): LiveChannel = LiveChannel(
