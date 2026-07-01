@@ -52,6 +52,12 @@ class BibleReaderViewModel @Inject constructor(
     private val _playingVerse = MutableStateFlow<String?>(null)
     val playingVerse: StateFlow<String?> = _playingVerse.asStateFlow()
 
+    /** Steuert, ob pro Vers die Video-Anzahl (▸N) eingeblendet wird. */
+    private val _showVideoBadges = MutableStateFlow(true)
+    val showVideoBadges: StateFlow<Boolean> = _showVideoBadges.asStateFlow()
+
+    fun toggleVideoBadges() { _showVideoBadges.value = !_showVideoBadges.value }
+
     private var mediaPlayer: MediaPlayer? = null
 
     init {

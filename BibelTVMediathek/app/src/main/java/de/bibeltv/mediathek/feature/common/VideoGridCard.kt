@@ -2,6 +2,7 @@ package de.bibeltv.mediathek.feature.common
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -22,16 +23,19 @@ import de.bibeltv.mediathek.domain.model.VideoItem
 @Composable
 fun VideoGridCard(video: VideoItem, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Column(modifier = modifier.clickable(onClick = onClick)) {
-        AsyncImage(
-            model = video.thumbnailUrl,
-            contentDescription = video.title,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(16f / 9f)
-                .clip(RoundedCornerShape(10.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant),
-        )
+        Box(modifier = Modifier.fillMaxWidth()) {
+            AsyncImage(
+                model = video.thumbnailUrl,
+                contentDescription = video.title,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(16f / 9f)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
+            )
+            DurationBadge(video.durationSeconds)
+        }
         Text(
             text = video.title,
             style = MaterialTheme.typography.bodyMedium,

@@ -157,7 +157,12 @@ fun AppRoot() {
                     BrowseScreen(onVideoClick = { v -> nav.navigate(Route.VideoDetail(crn = v.crn)) { launchSingleTop = true } })
                 }
                 composable<Route.Search> {
-                    SearchScreen(onVideoClick = { v -> nav.navigate(Route.VideoDetail(crn = v.crn)) { launchSingleTop = true } })
+                    SearchScreen(
+                        onVideoClick = { v -> nav.navigate(Route.VideoDetail(crn = v.crn)) { launchSingleTop = true } },
+                        onOpenBibleVerse = { hit ->
+                            nav.navigate(Route.BibleReader(bookSlug = hit.bookSlug, bookName = hit.bookName, chapter = hit.chapter)) { launchSingleTop = true }
+                        },
+                    )
                 }
                 composable<Route.Live> {
                     LiveScreen(onLiveClick = { c -> nav.navigate(Route.Player(title = c.title, isLive = true, liveId = c.id)) { launchSingleTop = true } })

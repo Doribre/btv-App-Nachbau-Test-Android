@@ -3,6 +3,7 @@ package de.bibeltv.mediathek.feature.bible.data
 import de.bibeltv.mediathek.di.BibleHttpClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.IOException
@@ -25,6 +26,12 @@ class BibleRemoteDataSource @Inject constructor(
     suspend fun fetchCatalogHtml(): String = get("$base/obd-1")
 
     suspend fun fetchChapterHtml(bookSlug: String, chapter: Int): String = get("$base/$bookSlug-$chapter")
+
+    /** Volltextsuche in der Bibel (GNB) – der Suchbegriff ist ein Pfadsegment. */
+    suspend fun fetchSearchHtml(query: String): String {
+        val url = base.toHttpUrl().newBuilder().addPathSegment(query).build().toString()
+        return get(url)
+    }
 
     private suspend fun get(url: String): String = withContext(Dispatchers.IO) {
         val request = Request.Builder()

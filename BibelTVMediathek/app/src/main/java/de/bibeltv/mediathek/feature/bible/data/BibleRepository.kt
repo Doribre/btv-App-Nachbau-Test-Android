@@ -37,6 +37,28 @@ class BibleRepository @Inject constructor(
         return resolve(bookSlug, bookName, chapter, parsed, links)
     }
 
+    /** Volltextsuche in der GNB (live). Liefert Vers-Treffer mit Referenz + Snippet. */
+    suspend fun searchBible(query: String): List<BibleSearchHit> {
+        val raw = BibleHtmlParser.parseSearch(remote.fetchSearchHtml(query))
+        if (raw.isEmpty()) return emptyList()
+        val bySlug = runCatching { books() }.getOrDefault(emptyList()).associateBy { it.slug }
+        return raw.mapNotNull { hit ->
+            val parts = hit.slug.split("-")
+            if (parts.size < 3) return@mapNotNull null
+            val verse = parts.last().toIntOrNull() ?: return@mapNotNull null
+            val chapter = parts[parts.size - 2].toIntOrNull() ?: return@mapNotNull null
+            val slug = parts.dropLast(2).joinToString("-")
+            BibleSearchHit(
+                bookSlug = slug,
+                bookName = bySlug[slug]?.name ?: slug,
+                chapter = chapter,
+                verse = verse,
+                reference = hit.reference,
+                snippet = hit.snippet,
+            )
+        }
+    }
+
     private fun resolve(
         bookSlug: String,
         bookName: String,

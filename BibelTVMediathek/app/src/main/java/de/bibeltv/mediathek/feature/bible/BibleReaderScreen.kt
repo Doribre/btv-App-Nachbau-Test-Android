@@ -85,6 +85,7 @@ fun BibleReaderScreen(
     val maxChapters by viewModel.maxChapters.collectAsStateWithLifecycle()
     val fontScale by viewModel.fontScale.collectAsStateWithLifecycle()
     val playingVerse by viewModel.playingVerse.collectAsStateWithLifecycle()
+    val showVideoBadges by viewModel.showVideoBadges.collectAsStateWithLifecycle()
 
     var selectedVerse by remember { mutableStateOf<BibleVerse?>(null) }
     var showChapterPicker by remember { mutableStateOf(false) }
@@ -114,6 +115,13 @@ fun BibleReaderScreen(
                     IconButton(onClick = viewModel::cycleFontScale) {
                         Icon(Icons.Filled.FormatSize, contentDescription = "Schriftgröße")
                     }
+                    IconButton(onClick = viewModel::toggleVideoBadges) {
+                        Icon(
+                            Icons.Filled.OndemandVideo,
+                            contentDescription = "Video-Anzahl je Vers anzeigen",
+                            tint = if (showVideoBadges) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                     if (chapterVideos.isNotEmpty()) {
                         IconButton(onClick = { showChapterVideos = true }) {
                             BadgedBox(badge = { Badge { Text("${chapterVideos.size}") } }) {
@@ -139,6 +147,7 @@ fun BibleReaderScreen(
                     ReaderContent(
                         chapter = s.chapter,
                         fontSizeSp = fontScale.sp,
+                        showVideoBadges = showVideoBadges,
                         onVerseClick = { selectedVerse = it },
                         canPrev = chapter > 1,
                         canNext = chapter < maxChapters,
@@ -221,6 +230,7 @@ fun BibleReaderScreen(
 private fun ReaderContent(
     chapter: BibleChapter,
     fontSizeSp: Int,
+    showVideoBadges: Boolean,
     onVerseClick: (BibleVerse) -> Unit,
     canPrev: Boolean,
     canNext: Boolean,
@@ -239,6 +249,7 @@ private fun ReaderContent(
                 append("\n")
             }
             val hasVideos = verse.videos.isNotEmpty()
+            val highlight = hasVideos && showVideoBadges
             withLink(
                 LinkAnnotation.Clickable(
                     tag = "verse-${verse.number}",
@@ -249,12 +260,12 @@ private fun ReaderContent(
                     SpanStyle(
                         baselineShift = BaselineShift.Superscript,
                         fontSize = (fontSizeSp * 0.62f).sp,
-                        color = if (hasVideos) accent else muted,
-                        fontWeight = if (hasVideos) FontWeight.Bold else FontWeight.Normal,
+                        color = if (highlight) accent else muted,
+                        fontWeight = if (highlight) FontWeight.Bold else FontWeight.Normal,
                     ),
                 ) {
                     append(verse.number)
-                    if (hasVideos) append("▸")
+                    if (highlight) append(" ▸${verse.videos.size}")
                 }
             }
             append(" ")

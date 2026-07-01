@@ -1,5 +1,7 @@
 package de.bibeltv.mediathek.feature.home
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -40,12 +42,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
+import de.bibeltv.mediathek.feature.common.DurationBadge
 import de.bibeltv.mediathek.domain.model.ContentRow
 import de.bibeltv.mediathek.domain.model.LiveChannel
 import de.bibeltv.mediathek.domain.model.VideoItem
@@ -98,6 +102,18 @@ private fun HomeContent(
                 ) {
                     items(content.live, key = { it.id }) { channel -> LiveCard(channel, onClick = { onLiveClick(channel) }) }
                 }
+                val context = LocalContext.current
+                Text(
+                    text = "TV-Programm (EPG) ansehen ›",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                        .clickable {
+                            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://www.bibeltv.de/programm")))
+                        },
+                )
             }
         }
         items(content.rows, key = { it.title }) { row -> ContentRowView(row, onVideoClick = onVideoClick) }
@@ -134,15 +150,18 @@ private fun VideoCardView(video: VideoItem, onClick: () -> Unit) {
             .width(220.dp)
             .clickable(onClick = onClick),
     ) {
-        AsyncImage(
-            model = video.thumbnailUrl,
-            contentDescription = video.title,
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(16f / 9f)
-                .clip(RoundedCornerShape(10.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant),
-        )
+        Box(modifier = Modifier.fillMaxWidth()) {
+            AsyncImage(
+                model = video.thumbnailUrl,
+                contentDescription = video.title,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(16f / 9f)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
+            )
+            DurationBadge(video.durationSeconds)
+        }
         Text(
             text = video.title,
             style = MaterialTheme.typography.bodyMedium,
@@ -286,6 +305,17 @@ private fun HeroCarousel(items: List<VideoItem>, onClick: (VideoItem) -> Unit) {
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
                     )
+                    val teaser = video.subtitle
+                    if (!teaser.isNullOrBlank()) {
+                        Text(
+                            text = teaser,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color.White.copy(alpha = 0.85f),
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.padding(top = 4.dp),
+                        )
+                    }
                     Button(onClick = { onClick(video) }, modifier = Modifier.padding(top = 8.dp)) {
                         Icon(Icons.Filled.PlayArrow, contentDescription = null)
                         Spacer(Modifier.width(6.dp))

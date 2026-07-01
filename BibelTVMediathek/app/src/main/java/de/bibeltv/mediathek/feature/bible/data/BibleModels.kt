@@ -29,6 +29,16 @@ data class BibleVerse(
     val videos: List<VerseVideo>,  // verknüpfte Videos (im Repository gefüllt)
 )
 
+/** Ein Volltext-Treffer aus der Bibelsuche. */
+data class BibleSearchHit(
+    val bookSlug: String,
+    val bookName: String,
+    val chapter: Int,
+    val verse: Int,
+    val reference: String,   // z. B. "Johannes 15,9"
+    val snippet: String,     // Verstext-Ausschnitt
+)
+
 /** Ein geladenes Kapitel. Lebt nur im Speicher während der Anzeige. */
 data class BibleChapter(
     val bookSlug: String,

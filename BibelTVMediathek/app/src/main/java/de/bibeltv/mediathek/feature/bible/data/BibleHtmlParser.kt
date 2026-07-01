@@ -28,6 +28,18 @@ object BibleHtmlParser {
     )
     data class ParsedChapter(val verses: List<ParsedVerse>, val videos: List<RawVideo>)
 
+    data class RawSearchHit(val slug: String, val reference: String, val snippet: String)
+
+    fun parseSearch(html: String): List<RawSearchHit> {
+        val doc = Jsoup.parse(html)
+        return doc.select(".fulltext-search-result a[data-slug]").mapNotNull { a ->
+            val slug = a.attr("data-slug").ifBlank { return@mapNotNull null }
+            val reference = a.selectFirst(".ref")?.text()?.trim().orEmpty()
+            val snippet = a.selectFirst(".verse")?.text()?.trim().orEmpty()
+            RawSearchHit(slug, reference, snippet)
+        }
+    }
+
     fun parseCatalog(html: String): List<BibleBook> {
         val doc = Jsoup.parse(html)
         val selector = doc.selectFirst("[data-book-selector]")?.attr("data-book-selector") ?: return emptyList()
