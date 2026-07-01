@@ -46,6 +46,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
@@ -302,8 +303,10 @@ private fun HeroCarousel(items: List<VideoItem>, onClick: (VideoItem) -> Unit) {
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
                         color = Color.White,
+                        lineHeight = 26.sp,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.padding(top = 6.dp),
                     )
                     val teaser = video.description ?: video.subtitle
                     if (!teaser.isNullOrBlank()) {
@@ -311,12 +314,13 @@ private fun HeroCarousel(items: List<VideoItem>, onClick: (VideoItem) -> Unit) {
                             text = teaser,
                             style = MaterialTheme.typography.bodyMedium,
                             color = Color.White.copy(alpha = 0.85f),
+                            lineHeight = 16.sp,
                             maxLines = 2,
                             overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.padding(top = 4.dp),
+                            modifier = Modifier.padding(top = 8.dp),
                         )
                     }
-                    Button(onClick = { onClick(video) }, modifier = Modifier.padding(top = 8.dp)) {
+                    Button(onClick = { onClick(video) }, modifier = Modifier.padding(top = 12.dp)) {
                         Icon(Icons.Filled.PlayArrow, contentDescription = null)
                         Spacer(Modifier.width(6.dp))
                         Text("Ansehen")
