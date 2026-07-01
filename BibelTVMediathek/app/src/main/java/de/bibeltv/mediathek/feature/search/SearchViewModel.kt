@@ -13,14 +13,17 @@ import de.bibeltv.mediathek.data.repository.VideoHubRepository
 import de.bibeltv.mediathek.domain.model.VideoItem
 import de.bibeltv.mediathek.feature.bible.data.BibleRepository
 import de.bibeltv.mediathek.feature.bible.data.BibleSearchHit
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
@@ -60,11 +63,36 @@ class SearchViewModel @Inject constructor(
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    /**
+     * Beschränkte Top-N-Video-Treffer (ohne Pager) als Merge-Kandidaten. Jede Quelle
+     * schluckt Fehler zu emptyList, damit eine langsame/fehlende Quelle die andere nie blockiert.
+     */
+    private val topVideos: StateFlow<List<VideoItem>> = query
+        .debounce(350L)
+        .mapLatest { q ->
+            if (q.isBlank()) emptyList()
+            else runCatching { repo.searchVideos(q.trim(), skip = 0, take = TOP_N) }.getOrDefault(emptyList())
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    /**
+     * EINE gemischte, nach Relevanz sortierte Trefferliste aus Bibel + Mediathek.
+     * combine toleriert, dass eine Quelle noch ihre initiale emptyList hält (Laden) oder
+     * per runCatching leer ausfällt. Scoring läuft off-main (flowOn Default).
+     */
+    val merged: StateFlow<List<SearchResultItem>> =
+        combine(topVideos, bibleHits, query) { videos, bible, q ->
+            if (q.isBlank()) emptyList() else SearchRelevance.merge(videos, bible, q.trim())
+        }
+            .flowOn(Dispatchers.Default)
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     fun onQueryChange(value: String) {
         savedStateHandle[KEY_QUERY] = value
     }
 
     companion object {
         private const val KEY_QUERY = "search_query"
+        private const val TOP_N = 40
     }
 }
