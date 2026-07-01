@@ -11,6 +11,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import de.bibeltv.mediathek.data.paging.VideoHubPagingSource
 import de.bibeltv.mediathek.data.repository.VideoHubRepository
 import de.bibeltv.mediathek.domain.model.VideoItem
+import de.bibeltv.mediathek.feature.bible.data.BibleBook
 import de.bibeltv.mediathek.feature.bible.data.BibleRepository
 import de.bibeltv.mediathek.feature.bible.data.BibleSearchHit
 import kotlinx.coroutines.Dispatchers
@@ -22,6 +23,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.mapLatest
@@ -86,6 +88,19 @@ class SearchViewModel @Inject constructor(
         }
             .flowOn(Dispatchers.Default)
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    /** Buch-Katalog (nur Metadaten, kein Verstext) – für die Referenz-Erkennung. */
+    private val books: StateFlow<List<BibleBook>> = flow {
+        emit(runCatching { bibleRepo.books() }.getOrDefault(emptyList()))
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    /**
+     * Erkennt konkrete Kapitel-Eingaben ("mt 8", "Matthäus 8") -> direkter Absprung in die
+     * Bibelthek statt Suchergebnisse. null = keine eindeutige Stelle -> normale gemischte Suche.
+     */
+    val chapterTarget: StateFlow<ChapterTarget?> =
+        combine(query.debounce(450L), books) { q, bookList -> detectChapterTarget(q, bookList) }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     fun onQueryChange(value: String) {
         savedStateHandle[KEY_QUERY] = value

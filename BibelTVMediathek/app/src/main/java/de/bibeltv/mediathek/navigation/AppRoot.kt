@@ -162,6 +162,9 @@ fun AppRoot() {
                         onOpenBibleVerse = { hit ->
                             nav.navigate(Route.BibleReader(bookSlug = hit.bookSlug, bookName = hit.bookName, chapter = hit.chapter)) { launchSingleTop = true }
                         },
+                        onOpenBibleChapter = { slug, name, chapter ->
+                            nav.navigate(Route.BibleReader(bookSlug = slug, bookName = name, chapter = chapter)) { launchSingleTop = true }
+                        },
                     )
                 }
                 composable<Route.Live> {

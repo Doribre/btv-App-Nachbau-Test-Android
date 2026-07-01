@@ -30,6 +30,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -60,11 +61,30 @@ import de.bibeltv.mediathek.feature.common.LoadingBox
 fun SearchScreen(
     onVideoClick: (VideoItem) -> Unit,
     onOpenBibleVerse: (BibleSearchHit) -> Unit,
+    onOpenBibleChapter: (bookSlug: String, bookName: String, chapter: Int) -> Unit,
     viewModel: SearchViewModel = hiltViewModel(),
 ) {
     val query by viewModel.query.collectAsStateWithLifecycle()
     val merged by viewModel.merged.collectAsStateWithLifecycle()
     val items = viewModel.results.collectAsLazyPagingItems()
+    val chapterTarget by viewModel.chapterTarget.collectAsStateWithLifecycle()
+
+    // Merkt sich die zuletzt automatisch geoeffnete Referenz -> verhindert Zurueck-Loop.
+    var jumpedForRef by rememberSaveable { mutableStateOf<String?>(null) }
+    val targetKey = chapterTarget?.let { "${it.slug}-${it.chapter}" }
+
+    // Konkrete Stellen-Eingabe ("mt 8") -> einmalig direkt ins Kapitel springen.
+    LaunchedEffect(targetKey) {
+        val t = chapterTarget
+        if (t != null && targetKey != null && jumpedForRef != targetKey) {
+            jumpedForRef = targetKey
+            onOpenBibleChapter(t.slug, t.name, t.chapter)
+        }
+    }
+    // Feld geleert -> Sperre zuruecksetzen, damit dieselbe Referenz erneut springen kann.
+    LaunchedEffect(query.isBlank()) {
+        if (query.isBlank()) jumpedForRef = null
+    }
 
     Column(modifier = Modifier.fillMaxSize()) {
         OutlinedTextField(
@@ -79,62 +99,109 @@ fun SearchScreen(
                 .padding(horizontal = 12.dp, vertical = 8.dp),
         )
 
-        if (query.isBlank()) {
-            CenteredHint("Suche nach Titel, Serie, Thema, Genre – oder Volltext in der Bibel.")
-        } else {
-            var showMore by rememberSaveable(query) { mutableStateOf(false) }
-            val videoRefreshing = items.loadState.refresh is LoadState.Loading
-            // crns, die bereits oben (gemischt) gezeigt werden -> im Tail nicht doppeln.
-            val shownCrns = merged.mapNotNull { (it as? SearchResultItem.Video)?.video?.crn }.toSet()
+        when {
+            query.isBlank() ->
+                CenteredHint("Suche nach Titel, Serie, Thema, Genre – oder Volltext in der Bibel.")
 
-            when {
-                merged.isEmpty() && videoRefreshing ->
-                    LoadingBox(Modifier.fillMaxWidth().weight(1f))
+            // Konkrete Bibelstelle erkannt -> KEINE Suchergebnisse, nur der direkte Absprung.
+            chapterTarget != null -> {
+                val target = chapterTarget!!
+                ChapterJumpCard(target) { onOpenBibleChapter(target.slug, target.name, target.chapter) }
+            }
 
-                merged.isEmpty() ->
-                    CenteredHint("Keine Treffer für \"$query\".", Modifier.fillMaxWidth().weight(1f))
+            else -> {
+                var showMore by rememberSaveable(query) { mutableStateOf(false) }
+                val videoRefreshing = items.loadState.refresh is LoadState.Loading
+                // crns, die bereits oben (gemischt) gezeigt werden -> im Tail nicht doppeln.
+                val shownCrns = merged.mapNotNull { (it as? SearchResultItem.Video)?.video?.crn }.toSet()
 
-                else -> LazyColumn(modifier = Modifier.fillMaxWidth().weight(1f)) {
-                    itemsIndexed(merged, key = { _, item -> item.key() }) { _, item ->
-                        when (item) {
-                            is SearchResultItem.Bible -> BibleResultRow(item.hit) { onOpenBibleVerse(item.hit) }
-                            is SearchResultItem.Video -> VideoResultRow(item.video) { onVideoClick(item.video) }
-                        }
-                    }
+                when {
+                    merged.isEmpty() && videoRefreshing ->
+                        LoadingBox(Modifier.fillMaxWidth().weight(1f))
 
-                    if (!showMore) {
-                        item {
-                            TextButton(
-                                onClick = { showMore = true },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                            ) { Text("Weitere Mediathek-Treffer laden") }
-                        }
-                    } else {
-                        items(count = items.itemCount, key = items.itemKey { "tail:" + it.crn }) { index ->
-                            items[index]?.let { v ->
-                                if (v.crn !in shownCrns) VideoResultRow(v) { onVideoClick(v) }
+                    merged.isEmpty() ->
+                        CenteredHint("Keine Treffer für \"$query\".", Modifier.fillMaxWidth().weight(1f))
+
+                    else -> LazyColumn(modifier = Modifier.fillMaxWidth().weight(1f)) {
+                        itemsIndexed(merged, key = { _, item -> item.key() }) { _, item ->
+                            when (item) {
+                                is SearchResultItem.Bible -> BibleResultRow(item.hit) { onOpenBibleVerse(item.hit) }
+                                is SearchResultItem.Video -> VideoResultRow(item.video) { onVideoClick(item.video) }
                             }
                         }
-                        when (items.loadState.append) {
-                            is LoadState.Loading -> item {
-                                Box(
-                                    modifier = Modifier.fillMaxWidth().padding(16.dp),
-                                    contentAlignment = Alignment.Center,
-                                ) { CircularProgressIndicator() }
+
+                        if (!showMore) {
+                            item {
+                                TextButton(
+                                    onClick = { showMore = true },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                                ) { Text("Weitere Mediathek-Treffer laden") }
                             }
-                            is LoadState.Error -> item {
-                                ErrorRetry(
-                                    message = "Weitere Inhalte konnten nicht geladen werden.",
-                                    onRetry = { items.retry() },
-                                    modifier = Modifier.fillMaxWidth().padding(16.dp),
-                                )
+                        } else {
+                            items(count = items.itemCount, key = items.itemKey { "tail:" + it.crn }) { index ->
+                                items[index]?.let { v ->
+                                    if (v.crn !in shownCrns) VideoResultRow(v) { onVideoClick(v) }
+                                }
                             }
-                            else -> {}
+                            when (items.loadState.append) {
+                                is LoadState.Loading -> item {
+                                    Box(
+                                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+                                        contentAlignment = Alignment.Center,
+                                    ) { CircularProgressIndicator() }
+                                }
+                                is LoadState.Error -> item {
+                                    ErrorRetry(
+                                        message = "Weitere Inhalte konnten nicht geladen werden.",
+                                        onRetry = { items.retry() },
+                                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+                                    )
+                                }
+                                else -> {}
+                            }
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+/** Direkter Absprung ins Kapitel, wenn eine konkrete Bibelstelle eingegeben wurde. */
+@Composable
+private fun ChapterJumpCard(target: ChapterTarget, onOpen: () -> Unit) {
+    Surface(
+        color = MaterialTheme.colorScheme.primaryContainer,
+        shape = RoundedCornerShape(12.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+            .clickable(onClick = onOpen),
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(16.dp),
+        ) {
+            Icon(
+                Icons.Filled.Book,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+            )
+            Spacer(Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    "${target.name} ${target.chapter}",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                )
+                Text(
+                    "Kapitel in der Bibelthek öffnen",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
+                )
             }
         }
     }

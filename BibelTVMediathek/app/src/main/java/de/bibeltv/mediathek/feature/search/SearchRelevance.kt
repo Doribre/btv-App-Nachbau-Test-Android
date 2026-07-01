@@ -1,6 +1,8 @@
 package de.bibeltv.mediathek.feature.search
 
 import de.bibeltv.mediathek.domain.model.VideoItem
+import de.bibeltv.mediathek.feature.bible.data.BibleBook
+import de.bibeltv.mediathek.feature.bible.data.BibleReference
 import de.bibeltv.mediathek.feature.bible.data.BibleSearchHit
 import java.text.Normalizer
 import java.util.Locale
@@ -139,4 +141,38 @@ object SearchRelevance {
     }
 
     private class Scored(val item: SearchResultItem, val source: Int, val idx: Int)
+}
+
+/** Eine erkannte, eindeutige Kapitel-Referenz -> direkter Absprung in die Bibelthek. */
+data class ChapterTarget(val slug: String, val name: String, val chapter: Int)
+
+// "<Buch> <Kapitel>[,/:/. Versteil]" – Buch darf Leerzeichen enthalten ("1 Kor"), Kapitel 1–3-stellig.
+private val CHAPTER_REF = Regex("""^(.+?)\s+(\d{1,3})(?:[.,:].*)?$""")
+
+/**
+ * Erkennt eine konkrete Kapitel-Eingabe ("mt 8", "Matthäus 8", "1 Kor 3", "joh 3,16") und löst
+ * sie über den bereits geladenen Buch-Katalog auf. Gibt null zurück, wenn keine eindeutige
+ * Stelle vorliegt (dann normale, gemischte Suche). Verse werden ignoriert – es wird das Kapitel
+ * geöffnet. Ungültige Kapitelnummern (> Kapitelanzahl des Buchs) gelten NICHT als Referenz.
+ */
+fun detectChapterTarget(rawQuery: String, books: List<BibleBook>): ChapterTarget? {
+    if (books.isEmpty()) return null
+    val m = CHAPTER_REF.find(rawQuery.trim()) ?: return null
+    val chapter = m.groupValues[2].toIntOrNull() ?: return null
+    if (chapter < 1) return null
+    val bookToken = normalize(m.groupValues[1])
+    if (bookToken.isEmpty()) return null
+    val book = resolveBook(bookToken, books) ?: return null
+    if (book.chapters > 0 && chapter > book.chapters) return null
+    return ChapterTarget(book.slug, book.name, chapter)
+}
+
+/** Buch-Token (bereits normalisiert) -> Katalogeintrag: über Slug, vollen Namen/Titel oder Abkürzung. */
+private fun resolveBook(normToken: String, books: List<BibleBook>): BibleBook? {
+    books.firstOrNull {
+        normalize(it.slug) == normToken || normalize(it.name) == normToken || normalize(it.title) == normToken
+    }?.let { return it }
+    val slug = BibleReference.ABBR_TO_SLUG.entries.firstOrNull { normalize(it.key) == normToken }?.value
+    if (slug != null) return books.firstOrNull { it.slug == slug }
+    return null
 }
