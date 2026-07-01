@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -258,11 +259,11 @@ private fun HeroCarousel(items: List<VideoItem>, onClick: (VideoItem) -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .aspectRatio(16f / 9f),
+            .aspectRatio(3f / 2f),
     ) {
         HorizontalPager(state = pagerState, modifier = Modifier.fillMaxSize()) { page ->
             val video = items[page]
-            Box(
+            BoxWithConstraints(
                 modifier = Modifier
                     .fillMaxSize()
                     .clickable { onClick(video) },
@@ -280,14 +281,20 @@ private fun HeroCarousel(items: List<VideoItem>, onClick: (VideoItem) -> Unit) {
                         .fillMaxSize()
                         .background(
                             Brush.verticalGradient(
-                                colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.78f)),
+                                0.0f to Color.Transparent,
+                                0.18f to Color.Transparent,
+                                0.35f to Color.Black.copy(alpha = 0.55f),
+                                0.62f to Color.Black.copy(alpha = 0.80f),
+                                1.0f to Color.Black.copy(alpha = 0.55f),
                             ),
                         ),
                 )
+                // Textblock endet knapp unterhalb der Mitte (unteres Ende bei ~60 % Höhe).
                 Column(
                     modifier = Modifier
                         .align(Alignment.BottomStart)
-                        .padding(16.dp),
+                        .padding(horizontal = 16.dp)
+                        .padding(bottom = maxHeight * 0.35f),
                 ) {
                     video.seriesTitle?.let {
                         Text(
