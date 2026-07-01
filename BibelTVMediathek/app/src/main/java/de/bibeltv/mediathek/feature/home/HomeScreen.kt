@@ -258,7 +258,7 @@ private fun HeroCarousel(items: List<VideoItem>, onClick: (VideoItem) -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .aspectRatio(7f / 6f),
+            .aspectRatio(11f / 9f),
     ) {
         HorizontalPager(state = pagerState, modifier = Modifier.fillMaxSize()) { page ->
             val video = items[page]
