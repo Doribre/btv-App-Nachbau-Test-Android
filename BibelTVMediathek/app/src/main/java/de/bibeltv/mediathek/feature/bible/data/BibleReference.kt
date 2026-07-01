@@ -27,6 +27,28 @@ object BibleReference {
     /** Slug → Abkürzung (für die VideoHub-VerseItem-Query, z. B. "joh" → "Joh"). */
     val SLUG_TO_ABBR: Map<String, String> = ABBR_TO_SLUG.entries.associate { (abbr, slug) -> slug to abbr }
 
+    /**
+     * Ökumenische Loccumer Abkürzungen (Loccumer Richtlinien) → Katalog-Slug.
+     * Nur für die Sucherkennung – erweitert (nicht ersetzt) die GNB-Tabelle oben. Deckt vor allem
+     * die abweichenden Formen ab: Pentateuch (Gen/Ex/Lev/Num/Dtn), Ijob, Koh (Kohelet), Ez (Ezechiel).
+     */
+    val LOCCUM_TO_SLUG: Map<String, String> = mapOf(
+        "Gen" to "1-mose", "Ex" to "2-mose", "Lev" to "3-mose", "Num" to "4-mose", "Dtn" to "5-mose",
+        "Jos" to "jos", "Ri" to "ri", "Rut" to "rut", "1 Sam" to "1-sam", "2 Sam" to "2-sam",
+        "1 Kön" to "1-kon", "2 Kön" to "2-kon", "1 Chr" to "1-chr", "2 Chr" to "2-chr",
+        "Esra" to "esra", "Neh" to "neh", "Est" to "est", "Ijob" to "hiob", "Ps" to "ps",
+        "Spr" to "spr", "Koh" to "pred", "Hld" to "hld", "Jes" to "jes", "Jer" to "jer",
+        "Klgl" to "klgl", "Ez" to "hes", "Dan" to "dan", "Hos" to "hos", "Joël" to "joel",
+        "Am" to "am", "Obd" to "obd", "Jona" to "jona", "Mi" to "mi", "Nah" to "nah",
+        "Hab" to "hab", "Zef" to "zef", "Hag" to "hag", "Sach" to "sach", "Mal" to "mal",
+        "Mt" to "mt", "Mk" to "mk", "Lk" to "lk", "Joh" to "joh", "Apg" to "apg",
+        "Röm" to "rom", "1 Kor" to "1-kor", "2 Kor" to "2-kor", "Gal" to "gal", "Eph" to "eph",
+        "Phil" to "phil", "Kol" to "kol", "1 Thess" to "1-thess", "2 Thess" to "2-thess",
+        "1 Tim" to "1-tim", "2 Tim" to "2-tim", "Tit" to "tit", "Phlm" to "phlm", "Hebr" to "hebr",
+        "Jak" to "jak", "1 Petr" to "1-petr", "2 Petr" to "2-petr", "1 Joh" to "1-joh",
+        "2 Joh" to "2-joh", "3 Joh" to "3-joh", "Jud" to "jud", "Offb" to "offb",
+    )
+
     data class VerseRef(
         val slug: String,
         val chapter: Int,

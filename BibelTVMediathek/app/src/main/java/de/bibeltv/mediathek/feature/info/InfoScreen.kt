@@ -9,6 +9,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -64,6 +65,33 @@ fun InfoScreen(onBack: () -> Unit) {
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+
+            HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
+            Text(
+                text = "Entwicklungs-Chronik",
+                style = MaterialTheme.typography.titleMedium,
+            )
+            Text(
+                text = "App-Version ${BuildConfig.VERSION_NAME}. Alle ${DEV_PROMPTS.size} in dieser " +
+                    "Entwicklungs-Session getippten Prompts – chronologisch, mit Zeitpunkt (Ortszeit) " +
+                    "und dem Modell, mit dem geantwortet wurde. Screenshots, System- und Task-" +
+                    "Meldungen sowie Wiederholungen sind ausgelassen.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            DEV_PROMPTS.forEachIndexed { index, p ->
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text(
+                        text = "${index + 1}.  ${p.time}  ·  ${p.model}",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                    Text(
+                        text = p.text,
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+            }
         }
     }
 }

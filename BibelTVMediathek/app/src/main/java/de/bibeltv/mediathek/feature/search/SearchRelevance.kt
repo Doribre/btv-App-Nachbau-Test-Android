@@ -167,12 +167,22 @@ fun detectChapterTarget(rawQuery: String, books: List<BibleBook>): ChapterTarget
     return ChapterTarget(book.slug, book.name, chapter)
 }
 
-/** Buch-Token (bereits normalisiert) -> Katalogeintrag: über Slug, vollen Namen/Titel oder Abkürzung. */
+/** Vergleicht ein Kandidaten-Feld mit dem (bereits normalisierten) Token, auch leerzeichen-tolerant. */
+private fun matchesToken(candidate: String, normToken: String): Boolean {
+    val c = normalize(candidate)
+    return c == normToken || c.replace(" ", "") == normToken.replace(" ", "")
+}
+
+/**
+ * Buch-Token (bereits normalisiert) -> Katalogeintrag: über Slug, vollen Namen/Titel, die
+ * GNB-Abkürzungen ODER die ökumenischen Loccumer Abkürzungen (Gen, Ex, Koh, Ez, Ijob …).
+ */
 private fun resolveBook(normToken: String, books: List<BibleBook>): BibleBook? {
     books.firstOrNull {
-        normalize(it.slug) == normToken || normalize(it.name) == normToken || normalize(it.title) == normToken
+        matchesToken(it.slug, normToken) || matchesToken(it.name, normToken) || matchesToken(it.title, normToken)
     }?.let { return it }
-    val slug = BibleReference.ABBR_TO_SLUG.entries.firstOrNull { normalize(it.key) == normToken }?.value
+    val slug = (BibleReference.ABBR_TO_SLUG + BibleReference.LOCCUM_TO_SLUG).entries
+        .firstOrNull { matchesToken(it.key, normToken) }?.value
     if (slug != null) return books.firstOrNull { it.slug == slug }
     return null
 }
