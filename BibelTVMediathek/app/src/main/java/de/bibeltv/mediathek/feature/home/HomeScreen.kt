@@ -6,7 +6,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -259,11 +258,11 @@ private fun HeroCarousel(items: List<VideoItem>, onClick: (VideoItem) -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .aspectRatio(3f / 2f),
+            .aspectRatio(7f / 6f),
     ) {
         HorizontalPager(state = pagerState, modifier = Modifier.fillMaxSize()) { page ->
             val video = items[page]
-            BoxWithConstraints(
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .clickable { onClick(video) },
@@ -282,19 +281,17 @@ private fun HeroCarousel(items: List<VideoItem>, onClick: (VideoItem) -> Unit) {
                         .background(
                             Brush.verticalGradient(
                                 0.0f to Color.Transparent,
-                                0.18f to Color.Transparent,
-                                0.35f to Color.Black.copy(alpha = 0.55f),
-                                0.62f to Color.Black.copy(alpha = 0.80f),
-                                1.0f to Color.Black.copy(alpha = 0.55f),
+                                0.48f to Color.Transparent,
+                                0.72f to Color.Black.copy(alpha = 0.72f),
+                                1.0f to Color.Black.copy(alpha = 0.90f),
                             ),
                         ),
                 )
-                // Textblock endet knapp unterhalb der Mitte (unteres Ende bei ~60 % Höhe).
+                // Gesamter Textblock in der unteren Hälfte, damit Gesichter/Motive (Mitte/leicht darüber) frei bleiben.
                 Column(
                     modifier = Modifier
                         .align(Alignment.BottomStart)
-                        .padding(horizontal = 16.dp)
-                        .padding(bottom = maxHeight * 0.35f),
+                        .padding(16.dp),
                 ) {
                     video.seriesTitle?.let {
                         Text(
@@ -311,7 +308,7 @@ private fun HeroCarousel(items: List<VideoItem>, onClick: (VideoItem) -> Unit) {
                         fontWeight = FontWeight.Bold,
                         color = Color.White,
                         lineHeight = 26.sp,
-                        maxLines = 2,
+                        maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.padding(top = 6.dp),
                     )
