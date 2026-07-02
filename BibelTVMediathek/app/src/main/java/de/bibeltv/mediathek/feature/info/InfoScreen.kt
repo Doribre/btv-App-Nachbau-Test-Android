@@ -68,21 +68,45 @@ fun InfoScreen(onBack: () -> Unit) {
 
             HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
             Text(
+                text = "Architektur & Technik",
+                style = MaterialTheme.typography.titleMedium,
+            )
+            InfoRow("Plattform", "Native Android · Kotlin · min SDK 26, target SDK 36")
+            InfoRow("UI", "Jetpack Compose + Material 3 · Navigation Compose (typsichere Routen)")
+            InfoRow(
+                "Architektur",
+                "MVVM / unidirektionaler State-Flow · Hilt (Dependency Injection) · " +
+                    "Single-Module, nach Feature gegliedert",
+            )
+            InfoRow(
+                "Daten",
+                "Apollo Kotlin GraphQL (VideoHub) · Paging 3 · OkHttp · Coil (Bilder) · " +
+                    "DataStore (Einstellungen)",
+            )
+            InfoRow("Player", "Media3 / ExoPlayer · HLS & DASH · Widevine-DRM")
+            InfoRow(
+                "Bibelthek",
+                "Verse live geladen (Gute Nachricht Bibel), nichts gespeichert · " +
+                    "Vers→Video über den VideoHub",
+            )
+
+            HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
+            Text(
                 text = "Entwicklungs-Chronik",
                 style = MaterialTheme.typography.titleMedium,
             )
             Text(
                 text = "App-Version ${BuildConfig.VERSION_NAME}. Alle ${DEV_PROMPTS.size} in dieser " +
-                    "Entwicklungs-Session getippten Prompts – chronologisch, mit Zeitpunkt (Ortszeit) " +
-                    "und dem Modell, mit dem geantwortet wurde. Screenshots, System- und Task-" +
-                    "Meldungen sowie Wiederholungen sind ausgelassen.",
+                    "Entwicklungs-Session getippten Prompts – chronologisch, mit Wochentag/Uhrzeit " +
+                    "(Ortszeit), dem Antwort-Modell und den erzeugten Ausgabe-Tokens (Hauptdialog). " +
+                    "Screenshots, System- und Task-Meldungen sowie Wiederholungen sind ausgelassen.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             DEV_PROMPTS.forEachIndexed { index, p ->
                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Text(
-                        text = "${index + 1}.  ${p.time}  ·  ${p.model}",
+                        text = "${index + 1}.  ${p.time}  ·  ${p.model}  ·  ${p.tokens}",
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.primary,
                     )

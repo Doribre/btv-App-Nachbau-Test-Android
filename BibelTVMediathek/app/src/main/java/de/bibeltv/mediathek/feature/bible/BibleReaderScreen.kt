@@ -64,7 +64,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withLink
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.text.InlineTextContent
+import androidx.compose.foundation.text.appendInlineContent
+import androidx.compose.ui.text.Placeholder
+import androidx.compose.ui.text.PlaceholderVerticalAlign
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
@@ -241,6 +246,7 @@ private fun ReaderContent(
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     val headingColor = MaterialTheme.colorScheme.primary
 
+    val inlineContent = LinkedHashMap<String, InlineTextContent>()
     val text = buildAnnotatedString {
         chapter.verses.forEachIndexed { index, verse ->
             verse.heading?.let { h ->
@@ -265,7 +271,22 @@ private fun ReaderContent(
                     ),
                 ) {
                     append(verse.number)
-                    if (highlight) append(" ▸${verse.videos.size}")
+                }
+            }
+            // Deutlich sichtbarer, tippbarer Video-Pill dort, wo es Videos gibt.
+            if (highlight) {
+                append(" ")
+                val count = verse.videos.size
+                val id = "vp-$index"
+                appendInlineContent(id, "Videos")
+                inlineContent[id] = InlineTextContent(
+                    Placeholder(
+                        width = (1.6f + 0.55f * count.toString().length).em,
+                        height = 1.35.em,
+                        placeholderVerticalAlign = PlaceholderVerticalAlign.Center,
+                    ),
+                ) {
+                    VerseVideoPill(count = count, fontSizeSp = fontSizeSp) { onVerseClick(verse) }
                 }
             }
             append(" ")
@@ -282,6 +303,7 @@ private fun ReaderContent(
     ) {
         Text(
             text = text,
+            inlineContent = inlineContent,
             fontFamily = FontFamily.Serif,
             fontSize = fontSizeSp.sp,
             lineHeight = (fontSizeSp * 1.6f).sp,
@@ -347,6 +369,28 @@ private fun VerseSheet(
             verse.videos.forEach { video ->
                 VideoRow(video) { onPlayVideo(video.crn, video.timeSeconds) }
             }
+        }
+    }
+}
+
+/** Grüner, tippbarer Pill im Bibeltext, der klar signalisiert: zu diesem Vers gibt es Videos. */
+@Composable
+private fun VerseVideoPill(count: Int, fontSizeSp: Int, onClick: () -> Unit) {
+    Surface(
+        color = MaterialTheme.colorScheme.primary,
+        shape = RoundedCornerShape(50),
+        modifier = Modifier
+            .fillMaxSize()
+            .clickable(onClick = onClick),
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Text(
+                text = "▶$count",
+                color = MaterialTheme.colorScheme.onPrimary,
+                fontSize = (fontSizeSp * 0.5f).sp,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+            )
         }
     }
 }
