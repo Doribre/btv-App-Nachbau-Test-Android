@@ -48,6 +48,13 @@ private fun normalize(raw: String): String {
 private fun tokenize(normalized: String): List<String> =
     normalized.split(' ').filter { it.isNotEmpty() }.distinct()
 
+/** Deutsche Funktionswörter (normalisiert). Zählen NICHT in die Query-Abdeckung. */
+private val STOPWORDS = setOf(
+    "der", "die", "das", "und", "in", "im", "zu", "zum", "zur", "von", "vom", "mit", "ist", "sind",
+    "am", "an", "auf", "fuer", "den", "dem", "des", "ein", "eine", "einen", "als", "auch", "oder",
+    "was", "wie", "wer", "dass", "nicht", "es", "er", "sie",
+)
+
 /** Ein gewichtetes Dokumentfeld, EINMAL normalisiert (schützt die Score-Schleife). */
 private class ScoredField(text: String, val weight: Double) {
     val norm: String = normalize(text)
@@ -69,11 +76,18 @@ object SearchRelevance {
     private const val W_PREFIX = 0.6            // Wort beginnt mit Token
     private const val W_SUBSTR = 0.3            // Token irgendwo enthalten
     private const val PHRASE_BONUS = 4.0        // ganze Query als zusammenhängender Teilstring
+    private const val MIN_SUBSTR_LEN = 4        // Teilstring-Treffer erst ab dieser Tokenlänge (killt "am" in "Amsterdam")
+
+    // Cross-Source-Fusion: die beiden Backends liefern KEINE vergleichbaren Scores -> rang-basiert mischen.
+    private const val RRF_K = 60.0              // Reciprocal-Rank-Fusion-Dämpfung
+    private const val W_RRF = 0.6               // Gewicht der Rang-Fusion
+    private const val W_LEX = 0.4               // Gewicht des quellenweise normalisierten Lexik-Scores
+    private const val BIBLE_BOOK_CAP = 2        // max. so viele Verse je Buch im Mix (Vielfalt)
 
     private fun fieldTokenScore(f: ScoredField, token: String): Double = when {
         f.words.any { it == token } -> W_EXACT
         f.words.any { it.startsWith(token) } -> W_PREFIX
-        f.norm.contains(token) -> W_SUBSTR
+        token.length >= MIN_SUBSTR_LEN && f.norm.contains(token) -> W_SUBSTR
         else -> 0.0
     }
 
@@ -81,18 +95,27 @@ object SearchRelevance {
         if (queryTokens.isEmpty()) return 0.0
         var weighted = 0.0
         var matched = 0
+        var denom = 0
         // Phrasen-Bonus nur bei Mehrwort-Query (sonst redundant zur Token-Schleife).
         if (queryTokens.size > 1) {
             val best = fields.filter { it.norm.contains(queryNorm) }.maxByOrNull { it.weight }
             if (best != null) weighted += PHRASE_BONUS * best.weight
         }
         for (t in queryTokens) {
-            var bestForToken = 0.0
-            for (f in fields) bestForToken = maxOf(bestForToken, fieldTokenScore(f, t) * f.weight)
-            if (bestForToken > 0.0) matched++
-            weighted += bestForToken
+            val isStop = t in STOPWORDS
+            if (!isStop) denom++
+            var bestTier = 0.0        // ungewichtete Trefferstufe (für Abdeckung)
+            var bestWeighted = 0.0    // gewichteter Beitrag (für den Score)
+            for (f in fields) {
+                val tier = fieldTokenScore(f, t)
+                if (tier > bestTier) bestTier = tier
+                bestWeighted = maxOf(bestWeighted, tier * f.weight)
+            }
+            weighted += bestWeighted
+            // Nur echte Wort-/Präfix-Treffer (kein reiner Teilstring) zählen zur Abdeckung.
+            if (!isStop && bestTier >= W_PREFIX) matched++
         }
-        val coverage = matched.toDouble() / queryTokens.size
+        val coverage = if (denom == 0) 1.0 else matched.toDouble() / denom
         val coverageFactor = 0.4 + 0.6 * coverage // Boden 0.4: ein starker Teiltreffer überlebt
         return weighted * coverageFactor
     }
@@ -110,37 +133,73 @@ object SearchRelevance {
     private fun bibleSnippetField(h: BibleSearchHit) = ScoredField(h.snippet, 2.5)
 
     /**
-     * Gemischte, relevanz-sortierte Liste. Filtert NIE (nur Reihenfolge); der Bibel-Input wird auf
-     * [BIBLE_MERGE_CAP] gedeckelt, damit hunderte Buch-Verse einen exakten Video-Titel nicht begraben.
+     * Gemischte, relevanz-sortierte Liste. Filtert NIE (nur Reihenfolge).
+     *
+     * Ranking: Videos und Bibel liefern keine vergleichbaren Roh-Scores, daher wird je Quelle
+     * (a) der Lexik-Score auf [0,1] normalisiert und (b) eine Reciprocal-Rank-Fusion über den
+     * quelleninternen Rang gebildet; beides wird gemischt. Verse werden zuerst komplett bewertet
+     * und dann als BESTE [BIBLE_MERGE_CAP] übernommen (max. [BIBLE_BOOK_CAP] je Buch) – nicht mehr
+     * die zufälligen ersten der HTML-Reihenfolge.
      */
     fun merge(videos: List<VideoItem>, bible: List<BibleSearchHit>, rawQuery: String): List<SearchResultItem> {
         val qNorm = normalize(rawQuery)
         val qTokens = tokenize(qNorm)
         if (qTokens.isEmpty()) return emptyList()
 
-        val videoScored = videos.mapIndexed { i, v ->
-            Scored(SearchResultItem.Video(v, scoreDoc(videoFields(v), qTokens, qNorm)), source = 0, idx = i)
+        // Videos: alle Kandidaten bewerten.
+        val videoRaw = videos.mapIndexed { i, v ->
+            val s = scoreDoc(videoFields(v), qTokens, qNorm)
+            RawScored(SearchResultItem.Video(v, s), s, i)
         }
-        val bibleScored = bible.take(BIBLE_MERGE_CAP).mapIndexed { i, h ->
+
+        // Bibel: ALLE bewerten -> nach Score sortieren -> je Buch deckeln -> die besten übernehmen.
+        val bibleRankedAll = bible.mapIndexed { i, h ->
             val refScore = scoreDoc(listOf(bibleRefField(h)), qTokens, qNorm)
             val snippetScore = scoreDoc(listOf(bibleSnippetField(h)), qTokens, qNorm)
             // Buchname-only-Demotion: Query matcht nur in Referenz/Buchname, nicht im Verstext.
             val refFactor = if (snippetScore <= 0.0 && refScore > 0.0) BOOK_ONLY_DEMOTION else 1.0
             val total = (refScore * refFactor + snippetScore) * BIBLE_BALANCE
-            Scored(SearchResultItem.Bible(h, total), source = 1, idx = i)
+            RawScored(SearchResultItem.Bible(h, total), total, i)
+        }.sortedWith(compareByDescending<RawScored> { it.raw }.thenBy { it.idx })
+
+        val perBook = HashMap<String, Int>()
+        val bibleRaw = ArrayList<RawScored>()
+        for (rs in bibleRankedAll) {
+            val slug = (rs.item as SearchResultItem.Bible).hit.bookSlug
+            val used = perBook[slug] ?: 0
+            if (used >= BIBLE_BOOK_CAP) continue
+            perBook[slug] = used + 1
+            bibleRaw.add(rs)
+            if (bibleRaw.size >= BIBLE_MERGE_CAP) break
         }
 
-        return (videoScored + bibleScored)
+        return (fuse(videoRaw, source = 0) + fuse(bibleRaw, source = 1))
             .sortedWith(
-                compareByDescending<Scored> { it.item.score }
-                    .thenBy { it.source } // bei Score-Gleichstand: Video (0) vor Bibel (1)
+                compareByDescending<Scored> { it.fused }
+                    .thenBy { it.source } // bei Gleichstand: Video (0) vor Bibel (1)
                     .thenBy { it.idx }    // sonst: Original-Reihenfolge je Quelle
                     .thenBy { it.item.key() }, // finaler Total-Order-Garant -> keine Reshuffles
             )
             .map { it.item }
     }
 
-    private class Scored(val item: SearchResultItem, val source: Int, val idx: Int)
+    /** Normalisiert die Lexik-Scores einer Quelle auf [0,1] und mischt sie mit der Reciprocal-Rank-Fusion. */
+    private fun fuse(items: List<RawScored>, source: Int): List<Scored> {
+        if (items.isEmpty()) return emptyList()
+        val maxS = items.maxOf { it.raw }
+        val minS = items.minOf { it.raw }
+        val out = ArrayList<Scored>(items.size)
+        items.sortedByDescending { it.raw }.forEachIndexed { rank, rs ->
+            val norm = if (maxS <= minS) { if (rs.raw > 0.0) 1.0 else 0.0 } else (rs.raw - minS) / (maxS - minS)
+            val rrf01 = RRF_K / (RRF_K + rank)
+            val fused = W_RRF * rrf01 + W_LEX * norm
+            out.add(Scored(rs.item, source, rs.idx, fused))
+        }
+        return out
+    }
+
+    private class RawScored(val item: SearchResultItem, val raw: Double, val idx: Int)
+    private class Scored(val item: SearchResultItem, val source: Int, val idx: Int, val fused: Double)
 }
 
 /** Eine erkannte, eindeutige Kapitel-Referenz -> direkter Absprung in die Bibelthek. */
@@ -156,15 +215,17 @@ private val CHAPTER_REF = Regex("""^(.+?)\s+(\d{1,3})(?:[.,:].*)?$""")
  * geöffnet. Ungültige Kapitelnummern (> Kapitelanzahl des Buchs) gelten NICHT als Referenz.
  */
 fun detectChapterTarget(rawQuery: String, books: List<BibleBook>): ChapterTarget? {
-    if (books.isEmpty()) return null
     val m = CHAPTER_REF.find(rawQuery.trim()) ?: return null
     val chapter = m.groupValues[2].toIntOrNull() ?: return null
     if (chapter < 1) return null
     val bookToken = normalize(m.groupValues[1])
     if (bookToken.isEmpty()) return null
-    val book = resolveBook(bookToken, books) ?: return null
-    if (book.chapters > 0 && chapter > book.chapters) return null
-    return ChapterTarget(book.slug, book.name, chapter)
+    val slug = resolveSlug(bookToken, books) ?: return null
+    val book = books.firstOrNull { it.slug == slug }
+    // Kapitel-Obergrenze nur prüfen, wenn der Katalog schon geladen ist (Kaltstart-tolerant).
+    if (book != null && book.chapters > 0 && chapter > book.chapters) return null
+    val name = book?.name ?: BibleReference.SLUG_TO_ABBR[slug] ?: slug
+    return ChapterTarget(slug, name, chapter)
 }
 
 /** Vergleicht ein Kandidaten-Feld mit dem (bereits normalisierten) Token, auch leerzeichen-tolerant. */
@@ -174,15 +235,14 @@ private fun matchesToken(candidate: String, normToken: String): Boolean {
 }
 
 /**
- * Buch-Token (bereits normalisiert) -> Katalogeintrag: über Slug, vollen Namen/Titel, die
- * GNB-Abkürzungen ODER die ökumenischen Loccumer Abkürzungen (Gen, Ex, Koh, Ez, Ijob …).
+ * Buch-Token (bereits normalisiert) -> Katalog-Slug: über Slug/Namen/Titel des Katalogs ODER die
+ * GNB-/Loccumer-Abkürzungstabellen. Da die Tabellen Compile-Zeit-Konstanten sind, funktioniert die
+ * Auflösung auch, wenn der Katalog noch nicht geladen ist (Kaltstart, z. B. "mt 8" gleich beim Öffnen).
  */
-private fun resolveBook(normToken: String, books: List<BibleBook>): BibleBook? {
+private fun resolveSlug(normToken: String, books: List<BibleBook>): String? {
     books.firstOrNull {
         matchesToken(it.slug, normToken) || matchesToken(it.name, normToken) || matchesToken(it.title, normToken)
-    }?.let { return it }
-    val slug = (BibleReference.ABBR_TO_SLUG + BibleReference.LOCCUM_TO_SLUG).entries
+    }?.let { return it.slug }
+    return (BibleReference.ABBR_TO_SLUG + BibleReference.LOCCUM_TO_SLUG).entries
         .firstOrNull { matchesToken(it.key, normToken) }?.value
-    if (slug != null) return books.firstOrNull { it.slug == slug }
-    return null
 }

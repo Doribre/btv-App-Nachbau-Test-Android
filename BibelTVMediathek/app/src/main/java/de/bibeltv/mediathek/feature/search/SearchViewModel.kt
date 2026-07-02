@@ -92,7 +92,7 @@ class SearchViewModel @Inject constructor(
     /** Buch-Katalog (nur Metadaten, kein Verstext) – für die Referenz-Erkennung. */
     private val books: StateFlow<List<BibleBook>> = flow {
         emit(runCatching { bibleRepo.books() }.getOrDefault(emptyList()))
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     /**
      * Erkennt konkrete Kapitel-Eingaben ("mt 8", "Matthäus 8") -> direkter Absprung in die
