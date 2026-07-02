@@ -2,10 +2,16 @@ package de.bibeltv.mediathek.feature.info
 
 /**
  * Auto-generierte Chronik aller in dieser Entwicklungs-Session getippten Nutzer-Prompts
- * (ohne Screenshots, Task-Benachrichtigungen und Duplikate), mit Wochentag/Zeit, Antwort-
- * Modell und den im Hauptdialog erzeugten Ausgabe-Tokens (Hintergrund-Subagenten nicht enthalten).
+ * mit Wochentag/Zeit, Antwort-Modell und den im Hauptdialog erzeugten Ausgabe-Tokens.
+ * Ausserdem die Token-Gesamtzahlen der Session (Snapshot bis zu diesem Build).
  */
 data class DevPrompt(val time: String, val model: String, val tokens: String, val text: String)
+
+// Token-Verbrauch dieser Session (Hauptdialog; Hintergrund-Subagenten nicht enthalten).
+const val DEV_TOKENS_OUTPUT = "8,27 Mio."
+const val DEV_TOKENS_OUTPUT_EXACT = "8.270.338"
+const val DEV_TOKENS_TOTAL = "1,02 Mrd."
+const val DEV_TOKENS_DETAIL = "frische Eingabe ~477 Tsd. · wiederholt gelesener Kontext (Cache) ~972,58 Mio. · gesamt verarbeitet ~1,02 Mrd."
 
 val DEV_PROMPTS: List<DevPrompt> = listOf(
     DevPrompt("Sa, 27. Juni 2026, 12:01", "Claude Opus 4.8", "~126 Tok.", "pwd"),
@@ -77,5 +83,6 @@ val DEV_PROMPTS: List<DevPrompt> = listOf(
     DevPrompt("Mi, 1. Juli 2026, 23:38", "Claude Opus 4.8", "~176.705 Tok.", "ja, aber wenn eine Bibelstelle konkret eingegeben wird wie mt 8 oder matthäus 8 soll er gleich das entsprechende kapitel in der bibelthek öffnen, gar keine suchergebnisse anzeigen"),
     DevPrompt("Mi, 1. Juli 2026, 23:54", "Claude Opus 4.8", "~122.862 Tok.", "er soll auch loccumer abkürzungen verstehen und bitte noch eine Info rein, welche Version und Liste aller Prompts, die ich hier bisher getippt habe mit Datum und Uhrzeit und deinem Modell, mit dem du geantwortet hast"),
     DevPrompt("Do, 2. Juli 2026, 05:19", "Claude Opus 4.8", "~23.709 Tok.", "bitte apk fertig machen"),
-    DevPrompt("Do, 2. Juli 2026, 06:54", "Claude Opus 4.8", "~122.650 Tok.", "super, schreib in die Info in die App auch, in welcher Architektur gebaut hast. Und bei der Historie, schreibe zum Datum auch immer Wochentag, also \"Fr, 4. Juni 45\" und wenn du es nachvollziehen kannst, auch die Anzahl der Tokens. Und in der Bibelthek würde ich gerne noch deutlicher und intuitiver erkennen, wo es Videos gibt. Danach bitte intensiv testen, alle funktionen. Und dann als 1.00 APK bauen"),
+    DevPrompt("Do, 2. Juli 2026, 06:54", "Claude Opus 4.8", "~212.261 Tok.", "super, schreib in die Info in die App auch, in welcher Architektur gebaut hast. Und bei der Historie, schreibe zum Datum auch immer Wochentag, also \"Fr, 4. Juni 45\" und wenn du es nachvollziehen kannst, auch die Anzahl der Tokens. Und in der Bibelthek würde ich gerne noch deutlicher und intuitiver erkennen, wo es Videos gibt. Danach bitte intensiv testen, alle funktionen. Und dann als 1.00 APK bauen"),
+    DevPrompt("Do, 2. Juli 2026, 07:16", "Claude Opus 4.8", "~37.437 Tok.", "super, und Zeige bei Info deutlich an, wie viele Tokens es bis hierher gebraucht hat was für einen emulator hast du hier den installiert?"),
 )

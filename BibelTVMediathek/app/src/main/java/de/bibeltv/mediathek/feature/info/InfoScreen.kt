@@ -6,6 +6,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Surface
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -88,6 +92,42 @@ fun InfoScreen(onBack: () -> Unit) {
                 "Bibelthek",
                 "Verse live geladen (Gute Nachricht Bibel), nichts gespeichert · " +
                     "Vers→Video über den VideoHub",
+            )
+
+            HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
+            Text(
+                text = "Token-Verbrauch dieser Session",
+                style = MaterialTheme.typography.titleMedium,
+            )
+            Surface(
+                color = MaterialTheme.colorScheme.primaryContainer,
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        text = "≈ $DEV_TOKENS_OUTPUT",
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    )
+                    Text(
+                        text = "von Claude erzeugte Ausgabe-Tokens · exakt $DEV_TOKENS_OUTPUT_EXACT",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    )
+                }
+            }
+            Text(
+                text = DEV_TOKENS_DETAIL,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Text(
+                text = "Hinweis: Der größte Teil davon ist wiederholt gelesener Kontext (Cache) – " +
+                    "nicht neu erzeugt. Hintergrund-Subagenten sind nicht mitgezählt. Snapshot bis zu diesem Build.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
 
             HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
