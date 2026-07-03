@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Book
@@ -30,7 +31,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -69,23 +69,6 @@ fun SearchScreen(
     val items = viewModel.results.collectAsLazyPagingItems()
     val chapterTarget by viewModel.chapterTarget.collectAsStateWithLifecycle()
 
-    // Merkt sich die zuletzt automatisch geoeffnete Referenz -> verhindert Zurueck-Loop.
-    var jumpedForRef by rememberSaveable { mutableStateOf<String?>(null) }
-    val targetKey = chapterTarget?.let { "${it.slug}-${it.chapter}" }
-
-    // Konkrete Stellen-Eingabe ("mt 8") -> einmalig direkt ins Kapitel springen.
-    LaunchedEffect(targetKey) {
-        val t = chapterTarget
-        if (t != null && targetKey != null && jumpedForRef != targetKey) {
-            jumpedForRef = targetKey
-            onOpenBibleChapter(t.slug, t.name, t.chapter)
-        }
-    }
-    // Feld geleert -> Sperre zuruecksetzen, damit dieselbe Referenz erneut springen kann.
-    LaunchedEffect(query.isBlank()) {
-        if (query.isBlank()) jumpedForRef = null
-    }
-
     Column(modifier = Modifier.fillMaxSize()) {
         OutlinedTextField(
             value = query,
@@ -94,6 +77,12 @@ fun SearchScreen(
             leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
             singleLine = true,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+            // Sprung in die Bibelthek erst bei "Enter"/Suchen – kein Auto-Sprung beim Tippen.
+            keyboardActions = KeyboardActions(
+                onSearch = {
+                    viewModel.currentChapterTarget()?.let { onOpenBibleChapter(it.slug, it.name, it.chapter) }
+                },
+            ),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 12.dp, vertical = 8.dp),

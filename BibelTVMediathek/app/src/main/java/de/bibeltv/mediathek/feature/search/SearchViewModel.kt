@@ -102,6 +102,9 @@ class SearchViewModel @Inject constructor(
         combine(query.debounce(450L), books) { q, bookList -> detectChapterTarget(q, bookList) }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
+    /** Synchron aus der AKTUELLEN Eingabe – für den Sprung bei "Enter" (ohne Debounce-Verzögerung). */
+    fun currentChapterTarget(): ChapterTarget? = detectChapterTarget(query.value.trim(), books.value)
+
     fun onQueryChange(value: String) {
         savedStateHandle[KEY_QUERY] = value
     }
