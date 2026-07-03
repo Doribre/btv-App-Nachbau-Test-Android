@@ -1,0 +1,8 @@
+# Eigenes Git-Repository (GitHub: Doribre/bibelverteileinladung, GitLab: brender/bibelverteilung-demo)
+bibelverteilung-demo/
+
+# Persönliche lokale Claude-Code-Einstellungen
+.claude/settings.local.json
+
+# Interne Analyse-/Handover-Datei mit Zugangsdaten – NIE einchecken
+BibelTV-App-Analyse-Handover.md
